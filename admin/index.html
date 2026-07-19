@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>De-Graceland | Social Content Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="../supabase-lite.js"></script>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 1);
+            border: 1px solid #e2e8f0;
+        }
+        .mobile-mockup {
+            width: 280px;
+            height: 480px;
+            border: 10px solid #0f172a;
+            border-radius: 36px;
+            position: relative;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 10px;
+        }
+        .btn-emerald {
+            background-color: #137333;
+            transition: all 0.2s ease;
+        }
+        .btn-emerald:hover {
+            background-color: #0f5e2a;
+        }
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        .file-input-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        /* Status Indicators in Grid */
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 1.5px solid white;
+            z-index: 10;
+        }
+        .dot-approved { background-color: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.6); }
+        .dot-pending { background-color: #f59e0b; box-shadow: 0 0 8px rgba(245, 158, 11, 0.6); }
+        .dot-rejected { background-color: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); }
+
+        .day-circle {
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        .day-active {
+            background-color: #ffffff;
+            color: #0f172a;
+            border: 1px solid #e2e8f0;
+        }
+        .day-selected {
+            ring: 2px solid #137333;
+            ring-offset: 2px;
+            background-color: #ecfdf5 !important;
+            border-color: #137333 !important;
+        }
+
+        /* Carousel Styles for Mockup */
+        .carousel-track {
+            display: flex;
+            transition: transform 0.3s ease-in-out;
+        }
+        .carousel-item {
+            min-width: 100%;
+            height: 280px;
+        }
+        .carousel-dots {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 4px;
+        }
+        .dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.5);
+        }
+        .dot.active {
+            background: white;
+            width: 7px;
+        }
+
+        .admin-media-viewer {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100dvh;
+            z-index: 500;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .admin-media-viewer.hidden {
+            display: none;
+        }
+        .admin-media-viewer-back {
+            position: fixed;
+            top: max(12px, env(safe-area-inset-top));
+            left: max(12px, env(safe-area-inset-left));
+            z-index: 520;
+            border: 1px solid rgba(255,255,255,.25);
+            background: rgba(10,35,74,.88);
+            color: white;
+            min-width: 74px;
+            height: 38px;
+            padding: 0 14px;
+            border-radius: 999px;
+            font-family: inherit;
+            font-size: .78rem;
+            font-weight: 800;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+        }
+        #adminMediaViewerContent,
+        #adminMediaViewerContent img,
+        #adminMediaViewerContent video {
+            width: 100vw;
+            height: 100dvh;
+            max-width: 100vw;
+            max-height: 100dvh;
+            object-fit: contain;
+            display: block;
+            background: #000;
+        }
+        #previewMedia {
+            cursor: zoom-in;
+            background: #eef2f7;
+        }
+        #previewMedia img,
+        #previewMedia video,
+        #previewMedia .carousel-item img,
+        #previewMedia .carousel-item video {
+            object-fit: contain !important;
+            background: #eef2f7;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased">
+
+    <header class="sticky top-0 z-50 w-full border-b border-[#dce3ed] bg-white/95 backdrop-blur-md px-6 py-3">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-8">
+                <div class="flex items-center gap-2">
+                    <img src="./graceland-logo.png" alt="De-Graceland" class="w-12 h-10 rounded-lg object-contain bg-white border border-slate-200 p-1">
+                    <h1 class="text-lg font-bold text-[#0A234A] tracking-tight uppercase">De-Graceland Content Admin</h1>
+                </div>
+                
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-3">
+                        <div class="relative group cursor-pointer" onclick="document.getElementById('logoUploadInput').click()">
+                            <img id="brandLogoDisplay" src="./graceland-logo.png" alt="Logo" class="w-9 h-9 rounded-lg border border-slate-200 object-contain bg-white">
+                            <input type="file" id="logoUploadInput" class="hidden" accept="image/*" onchange="uploadBrandLogo(this)">
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="text-[9px] font-bold uppercase text-slate-400 tracking-widest">Brand Profile</label>
+                            <select id="brandSelect" class="bg-transparent font-bold focus:outline-none text-slate-800 text-sm cursor-pointer" onchange="handleBrandChange()">
+                                <option value="75c3921a-414c-4591-9ed9-bfd890cec00c">De-Graceland Energy Limited</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="h-6 w-px bg-slate-200"></div>
+                    
+                    <div class="flex flex-col">
+                        <label class="text-[9px] font-bold uppercase text-slate-400 tracking-widest">Post Schedule</label>
+                        <input type="date" id="postDate" class="bg-transparent font-bold focus:outline-none text-slate-800 text-sm cursor-pointer" onchange="syncWeekWithDate()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button onclick="generateApprovalLink()" class="text-[10px] font-bold text-slate-500 border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-50 uppercase tracking-widest flex items-center gap-2">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                    Copy Approval Link
+                </button>
+                <div class="w-8 h-8 rounded-full bg-[#F5B400] flex items-center justify-center text-[#0A234A] font-bold border border-[#e0a400]">DG</div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <div class="lg:col-span-7 space-y-6">
+            <!-- WEEKLY NAVIGATION -->
+            <div class="glass-card rounded-2xl p-6 shadow-sm mb-6 border-l-4 border-l-[#137333]">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-4">
+                        <button onclick="changeWeek(-1)" class="p-2 hover:bg-slate-50 rounded-full text-slate-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <h3 id="weekRangeDisplay" class="text-sm font-bold text-[#0A234A] uppercase tracking-widest">Loading week...</h3>
+                        <button onclick="changeWeek(1)" class="p-2 hover:bg-slate-50 rounded-full text-slate-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
+                    </div>
+                    <div id="weeklyStatusBadge" class="bg-amber-50 text-amber-700 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">Drafting</div>
+                </div>
+
+                <div id="weekDaysGrid" class="grid grid-cols-7 gap-2 mb-10"></div>
+
+                <div class="flex items-center justify-between pt-4 border-t border-slate-100">
+                    <div class="flex items-center gap-4">
+                        <button onclick="resetFormToNew()" class="text-[9px] font-bold text-indigo-500 uppercase hover:underline text-left">Clear / Create New</button>
+                        <button id="deletePostBtn" onclick="initiateDelete()" class="hidden text-[9px] font-bold text-rose-500 uppercase hover:underline text-left">Delete Entire Post</button>
+                    </div>
+                    <button id="approveWeekBtn" onclick="toggleWeeklyApproval()" class="bg-[#0A234A] text-white text-[10px] font-bold px-4 py-2 rounded-lg hover:bg-[#071B38] transition-all uppercase tracking-widest">
+                        Submit Week
+                    </button>
+                </div>
+            </div>
+
+            <!-- COMPOSER -->
+            <div class="glass-card rounded-2xl p-8 shadow-sm">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="text-xl font-bold text-[#0A234A]" id="formTitle">Composer</h2>
+                        <p class="text-slate-500 text-xs" id="typeIndicator">Create a De-Graceland social post</p>
+                    </div>
+                    <div id="versionLabel" class="bg-[#eaf0f7] text-[#0A234A] text-[10px] font-bold px-3 py-1 rounded-full uppercase">New Post</div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Content Type</label>
+                    <div class="flex gap-2">
+                        <button onclick="setPostType('single')" id="btn-single" class="type-btn flex-1 py-2 text-xs font-bold rounded-lg bg-[#0A234A] text-white transition-all">Single</button>
+                        <button onclick="setPostType('carousel')" id="btn-carousel" class="type-btn flex-1 py-2 text-xs font-bold rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50">Carousel</button>
+                        <button onclick="setPostType('video')" id="btn-video" class="type-btn flex-1 py-2 text-xs font-bold rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50">Video</button>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Caption</label>
+                    <textarea id="captionInput" rows="4" class="w-full p-4 rounded-xl border border-slate-200 focus:ring-1 focus:ring-[#137333] outline-none text-sm leading-relaxed" placeholder="Write your post caption..."></textarea>
+                </div>
+
+                <div class="mb-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest">Media Assets</label>
+                            <p class="text-[9px] text-slate-400 font-medium italic">Upload, or use Ctrl+V to paste an image.</p>
+                        </div>
+                        <button onclick="addSlide()" id="addSlideBtn" class="text-[10px] font-bold text-[#137333] hover:text-[#0f5e2a] uppercase tracking-widest">+ Add Slide</button>
+                    </div>
+                    <div id="pasteZone"
+                         role="button"
+                         tabindex="0"
+                         onclick="pasteImageFromClipboard()"
+                         onkeydown="if(event.key==='Enter' || event.key===' '){event.preventDefault();pasteImageFromClipboard();}"
+                         class="mb-4 rounded-xl border-2 border-dashed border-[#9fcbb0] bg-[#f4fbf6] p-5 text-center cursor-pointer transition hover:border-[#137333] hover:bg-[#eef8f0] focus:outline-none focus:ring-2 focus:ring-[#137333]/30">
+                        <div class="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-white text-xl shadow-sm">📋</div>
+                        <p class="text-xs font-bold text-[#0A234A]">Paste an image from ChatGPT or any app</p>
+                        <p id="pasteStatus" class="mt-1 text-[10px] text-slate-500">
+                            Copy the image, return here, then press <strong>Ctrl+V</strong> — or click this box.
+                        </p>
+                    </div>
+                    <div id="mediaContainer" class="space-y-3"></div>
+                    <div id="existingMediaDisplay" class="mt-4 flex flex-wrap gap-2"></div>
+                </div>
+
+                <button id="submitBtn" onclick="submitPost()" class="w-full btn-emerald text-white font-bold py-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
+                    Submit Version
+                </button>
+            </div>
+        </div>
+
+        <div class="lg:col-span-5 space-y-8">
+            <!-- LIVE PREVIEW -->
+            <div class="glass-card rounded-2xl p-8 flex flex-col items-center shadow-sm">
+                <h3 class="text-[10px] font-bold text-slate-400 mb-6 uppercase tracking-widest">Mobile Preview</h3>
+                <div class="mobile-mockup">
+                    <div class="px-4 py-3 flex items-center gap-2 border-b border-slate-50 bg-white">
+                        <div id="previewLogo" class="w-5 h-5 rounded bg-slate-100 overflow-hidden">
+                            <img id="previewLogoImg" src="" class="w-full h-full object-contain hidden">
+                        </div>
+                        <span id="previewBrand" class="text-[10px] font-bold text-slate-800">Brand</span>
+                    </div>
+                    <div id="previewMedia" onclick="openAdminMediaViewer()" title="Tap to view full screen" class="w-full h-[280px] bg-slate-50 flex items-center justify-center relative overflow-hidden text-center p-0 cursor-zoom-in">
+                        <span class="text-[10px] text-slate-300 font-medium italic">No Asset Provided</span>
+                    </div>
+                    <div class="p-4">
+                        <div class="flex items-center gap-3 mb-3 text-slate-700">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                        </div>
+                        <p id="previewCaption" class="text-[11px] text-slate-600 leading-normal line-clamp-4">Captions help tell your story...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VERSION HISTORY -->
+            <div class="glass-card rounded-2xl p-6 shadow-sm flex flex-col max-h-[600px]">
+                <h3 class="text-xs font-bold text-[#0A234A] mb-4 flex items-center gap-2 uppercase tracking-widest">History & Feedback</h3>
+                <div id="historyContainer" class="space-y-4 overflow-y-auto custom-scrollbar flex-1 pr-2 text-center py-8">
+                    <p class="text-[10px] text-slate-400 italic">Select a date.</p>
+                </div>
+            </div>
+
+            <!-- CLIENT MESSAGES -->
+            <div class="glass-card rounded-2xl p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xs font-bold text-[#0A234A] uppercase tracking-widest">Client Messages</h3>
+                    <button onclick="loadFeedbackRequests()" class="text-[9px] font-bold text-[#137333] uppercase hover:underline">Refresh</button>
+                </div>
+                <div id="feedbackRequestsContainer" class="space-y-3 max-h-[320px] overflow-y-auto custom-scrollbar pr-1">
+                    <p class="text-[10px] text-slate-400 italic text-center py-4">No messages loaded.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- FULL-SCREEN IMAGE / VIDEO VIEWER -->
+    <div id="adminMediaViewer" class="admin-media-viewer hidden">
+        <button type="button" class="admin-media-viewer-back" onclick="closeAdminMediaViewer()">← Back</button>
+        <div id="adminMediaViewerContent"></div>
+    </div>
+
+    <!-- CUSTOM DELETE MODAL -->
+    <div id="deleteModal" class="fixed inset-0 bg-[#0A234A]/60 backdrop-blur-sm z-[200] hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-8 shadow-2xl transform transition-all scale-95 opacity-0 duration-300" id="deleteModalContent">
+            <div class="w-12 h-12 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mb-4">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            </div>
+            <h4 class="text-lg font-bold text-[#0A234A] mb-2 tracking-tight">Delete Whole Post?</h4>
+            <p class="text-sm text-slate-500 mb-8 leading-relaxed">This will remove all versions, media assets, and history for this day. This action cannot be undone.</p>
+            <div class="flex gap-3">
+                <button onclick="closeDeleteModal()" class="flex-1 py-3 text-sm font-bold text-slate-500 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">Cancel</button>
+                <button onclick="executeDelete()" id="confirmDeleteBtn" class="flex-1 py-3 text-sm font-bold text-white bg-rose-500 rounded-xl hover:bg-rose-600 shadow-lg shadow-rose-100 transition-all">Confirm Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-6 right-6 px-6 py-3 rounded-xl shadow-2xl text-white font-bold text-sm transform translate-y-24 transition-all duration-300 z-[100] opacity-0 pointer-events-none"></div>
+
+    <script>
+const SUPABASE_URL = 'https://hveddjxrixzuqzdbbagg.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_fWOj7rkYlc8a3eKhgznqJg_mJ1DqX83';
+const BRAND_ID = '75c3921a-414c-4591-9ed9-bfd890cec00c';
+const BRAND_SLUG = 'de-graceland';
+const STORAGE_BUCKET = 'media';
+const LOCAL_LOGO = '../graceland-logo.png';
+const db = PublicSupabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let postType = 'single';
+let viewDate = new Date();
+let isWeekApproved = false;
+let currentSlot = null;
+let currentVersions = [];
+let currentAssets = [];
+let pastedFiles = [];
+let previewAssets = [];
+let carouselInterval = null;
+let carouselIndex = 0;
+let brandMetadata = null;
+let activePreviewAssets = [];
+
+const captionInput = document.getElementById('captionInput');
+const mediaContainer = document.getElementById('mediaContainer');
+const existingMediaDisplay = document.getElementById('existingMediaDisplay');
+const previewMedia = document.getElementById('previewMedia');
+const previewCaption = document.getElementById('previewCaption');
+const submitBtn = document.getElementById('submitBtn');
+const postDateInput = document.getElementById('postDate');
+const weekRangeDisplay = document.getElementById('weekRangeDisplay');
+const weekDaysGrid = document.getElementById('weekDaysGrid');
+const weeklyStatusBadge = document.getElementById('weeklyStatusBadge');
+const deletePostBtn = document.getElementById('deletePostBtn');
+const brandSelect = document.getElementById('brandSelect');
+const versionLabel = document.getElementById('versionLabel');
+const formTitle = document.getElementById('formTitle');
+const historyContainer = document.getElementById('historyContainer');
+const brandLogoDisplay = document.getElementById('brandLogoDisplay');
+const previewLogoImg = document.getElementById('previewLogoImg');
+const feedbackRequestsContainer = document.getElementById('feedbackRequestsContainer');
+const toast = document.getElementById('toast');
+const deleteModal = document.getElementById('deleteModal');
+const deleteModalContent = document.getElementById('deleteModalContent');
+const MEDIA_PLACEHOLDER = `<span class="text-[10px] text-slate-300 font-medium italic text-center p-4">No media provided</span>`;
+
+function escapeHTML(value = '') {
+    return String(value).replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+}
+
+function localISO(date) {
+    return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+}
+
+function parseLocalISO(value) {
+    const [year, month, day] = value.split('-').map(Number);
+    return new Date(year, month - 1, day);
+}
+
+function getWeekInfo(value) {
+    const date = value instanceof Date ? new Date(value) : parseLocalISO(value);
+    const day = date.getDay();
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(date.setDate(diff));
+    monday.setHours(0,0,0,0);
+    const sunday = new Date(monday);
+    sunday.setDate(sunday.getDate() + 6);
+    return { monday, sunday };
+}
+
+window.changeWeek = offset => {
+    viewDate.setDate(viewDate.getDate() + offset * 7);
+    const { monday } = getWeekInfo(viewDate);
+    postDateInput.value = localISO(monday);
+    loadWeeklyData();
+    fetchPostForDate(postDateInput.value);
+};
+
+window.syncWeekWithDate = () => {
+    viewDate = parseLocalISO(postDateInput.value);
+    loadWeeklyData();
+    fetchPostForDate(postDateInput.value);
+};
+
+window.selectDate = iso => {
+    postDateInput.value = iso;
+    viewDate = parseLocalISO(iso);
+    loadWeeklyData();
+    fetchPostForDate(iso);
+};
+
+window.handleBrandChange = () => {
+    brandSelect.value = BRAND_ID;
+    loadBrandMetadata();
+    loadWeeklyData();
+    fetchPostForDate(postDateInput.value);
+};
+
+async function loadBrandMetadata() {
+    try {
+        const { data, error } = await db.from('brands').select('*').eq('id', BRAND_ID).maybeSingle();
+        if (error) throw error;
+        brandMetadata = data;
+        const logo = data?.logo_url || LOCAL_LOGO;
+        brandLogoDisplay.src = logo;
+        previewLogoImg.src = logo;
+        previewLogoImg.classList.remove('hidden');
+        brandLogoDisplay.onerror = () => { brandLogoDisplay.src = LOCAL_LOGO; };
+        previewLogoImg.onerror = () => { previewLogoImg.src = LOCAL_LOGO; };
+        document.getElementById('previewBrand').innerText = data?.name || 'De-Graceland Energy Limited';
+    } catch (error) {
+        console.error(error);
+        brandLogoDisplay.src = LOCAL_LOGO;
+        previewLogoImg.src = LOCAL_LOGO;
+        previewLogoImg.classList.remove('hidden');
+    }
+}
+
+window.uploadBrandLogo = async input => {
+    const file = input.files?.[0];
+    if (!file) return;
+    try {
+        const extension = (file.name.split('.').pop() || 'png').toLowerCase();
+        const path = `${BRAND_ID}/brand-logo-${Date.now()}.${extension}`;
+        const { error: uploadError } = await db.storage.from(STORAGE_BUCKET).upload(path, file, { upsert: true });
+        if (uploadError) throw uploadError;
+        const { data: publicData } = db.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+        const { error: updateError } = await db.from('brands').update({ logo_url: publicData.publicUrl }).eq('id', BRAND_ID);
+        if (updateError) throw updateError;
+        showNotification('Brand logo updated.', 'success');
+        await loadBrandMetadata();
+    } catch (error) {
+        showNotification(`Logo upload failed: ${error.message}`, 'error');
+    } finally {
+        input.value = '';
+    }
+};
+
+window.updateApprovalUI = status => {
+    const normalized = String(status || 'drafting').toLowerCase();
+    if (normalized === 'approved') {
+        weeklyStatusBadge.innerText = 'Approved for Rollout';
+        weeklyStatusBadge.className = 'bg-[#eef8f0] text-[#137333] text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest';
+    } else if (normalized === 'pending_review' || normalized === 'pending') {
+        weeklyStatusBadge.innerText = 'Client Review Requested';
+        weeklyStatusBadge.className = 'bg-[#eaf0f7] text-[#0A234A] text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest';
+    } else if (normalized === 'rejected') {
+        weeklyStatusBadge.innerText = 'Edits Requested';
+        weeklyStatusBadge.className = 'bg-rose-50 text-rose-700 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest';
+    } else {
+        weeklyStatusBadge.innerText = 'Work in Progress';
+        weeklyStatusBadge.className = 'bg-amber-50 text-amber-700 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest';
+    }
+};
+
+async function loadWeeklyData() {
+    const { monday, sunday } = getWeekInfo(viewDate);
+    const startStr = localISO(monday);
+    const endStr = localISO(sunday);
+    weekRangeDisplay.innerText = `${monday.toLocaleDateString('en-GB',{day:'numeric',month:'short'})} to ${sunday.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}`;
+
+    try {
+        const { data: slots, error: slotsError } = await db.from('post_slots')
+            .select('id,scheduled_date,current_status')
+            .eq('brand_id', BRAND_ID)
+            .gte('scheduled_date', startStr)
+            .lte('scheduled_date', endStr);
+        if (slotsError) throw slotsError;
+
+        const { data: approval, error: approvalError } = await db.from('weekly_approvals')
+            .select('*').eq('brand_id', BRAND_ID).eq('week_start_date', startStr).maybeSingle();
+        if (approvalError) throw approvalError;
+        isWeekApproved = approval?.status === 'approved';
+        updateApprovalUI(approval?.status || 'drafting');
+
+        weekDaysGrid.innerHTML = '';
+        const dayNames = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+        for (let i=0;i<7;i++) {
+            const day = new Date(monday);
+            day.setDate(day.getDate()+i);
+            const iso = localISO(day);
+            const slot = slots?.find(row => row.scheduled_date === iso);
+            const status = slot?.current_status?.toLowerCase();
+            const selected = iso === postDateInput.value;
+            let dot = '';
+            if (status === 'approved') dot = 'dot-approved';
+            else if (status === 'rejected') dot = 'dot-rejected';
+            else if (slot) dot = 'dot-pending';
+            weekDaysGrid.innerHTML += `<div onclick="selectDate('${iso}')" class="flex flex-col items-center gap-2 cursor-pointer group relative"><span class="text-[9px] font-bold ${selected ? 'text-[#137333]' : 'text-slate-400'} uppercase">${dayNames[i]}</span><div class="w-8 h-8 rounded-full day-circle transition-all flex items-center justify-center text-[10px] font-bold ${slot ? 'day-active shadow-sm' : 'bg-slate-50 text-slate-300'} ${selected ? 'day-selected' : 'group-hover:bg-slate-100'}">${day.getDate()}${dot ? `<div class="status-dot ${dot}"></div>` : ''}</div></div>`;
+        }
+        await loadFeedbackRequests();
+    } catch (error) {
+        console.error(error);
+        weekDaysGrid.innerHTML = `<p class="col-span-7 text-center text-xs text-rose-600 py-5">Could not connect: ${escapeHTML(error.message)}</p>`;
+        showNotification(`Week load failed: ${error.message}`, 'error');
+    }
+}
+
+async function fetchPostForDate(iso) {
+    historyContainer.innerHTML = '<p class="text-[10px] text-slate-400 italic">Fetching...</p>';
+    try {
+        const { data: slot, error: slotError } = await db.from('post_slots').select('*').eq('brand_id', BRAND_ID).eq('scheduled_date', iso).maybeSingle();
+        if (slotError) throw slotError;
+        if (!slot) {
+            resetFormToNew(false);
+            return;
+        }
+
+        currentSlot = slot;
+        deletePostBtn.classList.remove('hidden');
+        formTitle.innerText = 'Edit Scheduled Post';
+        const { data: versions, error: versionError } = await db.from('post_versions').select('*,comments(*)').eq('slot_id', slot.id).order('version_number', { ascending: false });
+        if (versionError) throw versionError;
+        currentVersions = versions || [];
+        renderHistory(currentVersions);
+
+        if (!currentVersions.length) {
+            currentAssets = [];
+            previewAssets = [];
+            captionInput.value = '';
+            versionLabel.innerText = 'No Version';
+            renderExistingMedia([]);
+            updatePreview();
+            return;
+        }
+
+        const latest = currentVersions[0];
+        captionInput.value = latest.caption || '';
+        versionLabel.innerText = `Version ${latest.version_number} — ${(slot.current_status || 'drafting').replace('_',' ')}`;
+        const { data: assets, error: assetsError } = await db.from('media_assets').select('*').eq('version_id', latest.id).order('order_index');
+        if (assetsError) throw assetsError;
+        currentAssets = assets || [];
+        previewAssets = currentAssets;
+        renderExistingMedia(currentAssets);
+        inferPostType(currentAssets);
+        updatePreview();
+    } catch (error) {
+        console.error(error);
+        showNotification(`Post load failed: ${error.message}`, 'error');
+    }
+}
+
+function inferPostType(assets) {
+    if (assets.length > 1) setPostType('carousel');
+    else if (assets[0]?.media_type === 'video' || /\.(mp4|webm|mov)(?:[?#].*)?$/i.test(assets[0]?.file_url || '')) setPostType('video');
+    else setPostType('single');
+}
+
+function renderHistory(versions) {
+    if (!versions.length) {
+        historyContainer.innerHTML = '<p class="text-[10px] text-slate-400 italic">No history found.</p>';
+        return;
+    }
+    historyContainer.innerHTML = versions.map(version => {
+        const approved = version.is_approved === true;
+        const rejected = version.is_approved === false;
+        const badge = approved ? 'bg-[#eef8f0] text-[#137333]' : rejected ? 'bg-rose-50 text-rose-600' : 'bg-slate-50 text-slate-500';
+        const status = approved ? 'Approved' : rejected ? 'Edits Requested' : 'Draft';
+        const comments = version.comments || [];
+        return `<div class="p-4 bg-white border border-slate-100 rounded-xl text-left shadow-sm mb-4"><div class="flex justify-between items-center mb-2"><span class="text-[9px] font-bold text-slate-400 uppercase">Version ${version.version_number}</span><span class="text-[8px] font-bold px-2 py-0.5 rounded-full uppercase ${badge}">${status}</span></div><p class="text-[11px] text-slate-600 mb-3 leading-snug whitespace-pre-wrap">${escapeHTML(version.caption || 'No caption')}</p>${comments.map(comment => `<div class="p-2.5 rounded-lg border-l-4 ${comment.author_role === 'client' ? 'bg-rose-50 border-rose-400' : 'bg-slate-50 border-slate-300'} mb-1.5"><span class="text-[8px] font-bold uppercase ${comment.author_role === 'client' ? 'text-rose-600' : 'text-slate-400'}">${escapeHTML(comment.author_role)} feedback</span><p class="text-[10px] ${comment.author_role === 'client' ? 'text-rose-700' : 'text-slate-600'} italic leading-tight mt-1">“${escapeHTML(comment.content)}”</p></div>`).join('')}</div>`;
+    }).join('');
+}
+
+function renderExistingMedia(assets) {
+    existingMediaDisplay.innerHTML = assets.length ? assets.map(asset => {
+        const video = asset.media_type === 'video' || /\.(mp4|webm|mov)(?:[?#].*)?$/i.test(asset.file_url || '');
+        return `<div class="relative w-16 h-16 rounded-lg overflow-hidden border border-slate-200 shadow-sm">${video ? `<video src="${escapeHTML(asset.file_url)}" class="w-full h-full object-cover" muted></video>` : `<img src="${escapeHTML(asset.file_url)}" class="w-full h-full object-cover" alt="Existing media">`}</div>`;
+    }).join('') : '';
+}
+
+window.setPostType = type => {
+    postType = type;
+    document.querySelectorAll('.type-btn').forEach(button => {
+        button.classList.remove('bg-[#0A234A]','text-white');
+        button.classList.add('border','border-slate-200','text-slate-500');
+    });
+    const active = document.getElementById(`btn-${type}`);
+    active.classList.remove('border','border-slate-200','text-slate-500');
+    active.classList.add('bg-[#0A234A]','text-white');
+    document.getElementById('typeIndicator').innerText = type === 'video' ? 'Create a video post' : type === 'carousel' ? 'Create a carousel post' : 'Create a single post';
+    updatePreview();
+};
+
+function updatePreview() {
+    previewCaption.innerText = captionInput.value || 'Captions help tell your story...';
+    clearInterval(carouselInterval);
+    const inputFiles = Array.from(document.querySelectorAll('.media-file-input')).map(input => input.files?.[0]).filter(Boolean);
+    const files = [...inputFiles, ...pastedFiles];
+    const assets = files.length ? files : previewAssets;
+    activePreviewAssets = assets;
+    if (!assets.length) {
+        previewMedia.innerHTML = MEDIA_PLACEHOLDER;
+        return;
+    }
+    renderPreviewMedia(assets);
+}
+
+function assetURL(asset) {
+    if (asset instanceof File) return URL.createObjectURL(asset);
+    if (typeof asset === 'string') return asset;
+    return asset.file_url || '';
+}
+
+function isVideoAsset(asset) {
+    if (asset instanceof File) return asset.type.startsWith('video/');
+    return asset.media_type === 'video' || /\.(mp4|webm|mov)(?:[?#].*)?$/i.test(assetURL(asset));
+}
+
+function renderPreviewMedia(assets) {
+    if (postType === 'video' || isVideoAsset(assets[0])) {
+        previewMedia.innerHTML = `<video src="${escapeHTML(assetURL(assets[0]))}" autoplay muted loop playsinline class="w-full h-full object-contain"></video>`;
+        return;
+    }
+    if (postType === 'carousel' && assets.length > 1) {
+        carouselIndex = 0;
+        previewMedia.innerHTML = `<div class="carousel-track" style="transform:translateX(0)">${assets.map(asset => `<div class="carousel-item"><img src="${escapeHTML(assetURL(asset))}" class="w-full h-full object-contain" alt="Carousel preview"></div>`).join('')}</div><div class="carousel-dots">${assets.map((_,i)=>`<div class="dot ${i===0?'active':''}"></div>`).join('')}</div>`;
+        const track = previewMedia.querySelector('.carousel-track');
+        const dots = previewMedia.querySelectorAll('.dot');
+        carouselInterval = setInterval(() => {
+            carouselIndex = (carouselIndex + 1) % assets.length;
+            track.style.transform = `translateX(-${carouselIndex * 100}%)`;
+            dots.forEach((dot,index)=>dot.classList.toggle('active', index===carouselIndex));
+        }, 3000);
+        return;
+    }
+    previewMedia.innerHTML = `<img src="${escapeHTML(assetURL(assets[0]))}" class="w-full h-full object-contain" alt="Post preview">`;
+}
+
+window.submitPost = async () => {
+    const inputFiles = Array.from(document.querySelectorAll('.media-file-input')).map(input => input.files?.[0]).filter(Boolean);
+    const allFiles = [...inputFiles, ...pastedFiles];
+    if (!allFiles.length && !currentAssets.length && !captionInput.value.trim()) return showNotification('Add a caption or media first.', 'error');
+
+    const invalidFile = allFiles.find(file => !(file.type.startsWith('image/') || file.type.startsWith('video/')));
+    if (invalidFile) return showNotification(`${invalidFile.name} is not an image or video.`, 'error');
+    const oversizedFile = allFiles.find(file => file.size > 100 * 1024 * 1024);
+    if (oversizedFile) return showNotification(`${oversizedFile.name} is above the 100 MB limit.`, 'error');
+
+    submitBtn.disabled = true;
+    submitBtn.innerText = allFiles.length ? 'Preparing upload...' : 'Saving caption...';
+    try {
+        const newAssets = [];
+        for (let index=0; index<allFiles.length; index++) {
+            const file = allFiles[index];
+            submitBtn.innerText = `Uploading ${index + 1} of ${allFiles.length}...`;
+            const safeName = (file.name || `asset-${index}.png`).replace(/[^a-zA-Z0-9._-]/g,'_');
+            const uniquePart = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+            const path = `${BRAND_ID}/${postDateInput.value}/${uniquePart}-${safeName}`;
+            const { error: uploadError } = await db.storage.from(STORAGE_BUCKET).upload(path, file, {
+                upsert: false,
+                contentType: file.type || 'application/octet-stream',
+                cacheControl: '3600'
+            });
+            if (uploadError) throw new Error(`Media upload failed: ${uploadError.message}`);
+            const { data: publicData } = db.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+            newAssets.push({
+                file_url: publicData.publicUrl,
+                storage_path: path,
+                media_type: file.type.startsWith('video/') ? 'video' : 'image',
+                order_index: index
+            });
+        }
+        submitBtn.innerText = 'Saving post...';
+
+        let slotId = currentSlot?.id;
+        if (!slotId) {
+            const { data: slot, error: slotError } = await db.from('post_slots').insert({ brand_id: BRAND_ID, scheduled_date: postDateInput.value, current_status: 'pending' }).select().single();
+            if (slotError) throw slotError;
+            slotId = slot.id;
+        } else {
+            const { error: statusError } = await db.from('post_slots').update({ current_status: 'pending' }).eq('id', slotId);
+            if (statusError) throw statusError;
+        }
+
+        const nextVersion = (currentVersions[0]?.version_number || 0) + 1;
+        const { data: version, error: versionError } = await db.from('post_versions').insert({ slot_id: slotId, version_number: nextVersion, caption: captionInput.value.trim(), is_approved: null }).select().single();
+        if (versionError) throw versionError;
+
+        const mediaRows = newAssets.length ? newAssets : currentAssets.map((asset,index)=>({
+            file_url: asset.file_url,
+            storage_path: asset.storage_path || null,
+            media_type: asset.media_type || (isVideoAsset(asset) ? 'video' : 'image'),
+            order_index: index
+        }));
+        if (mediaRows.length) {
+            const { error: mediaError } = await db.from('media_assets').insert(mediaRows.map(row => ({...row, version_id: version.id})));
+            if (mediaError) throw mediaError;
+        }
+
+        showNotification('Version submitted for review.', 'success');
+        pastedFiles = [];
+        mediaContainer.innerHTML = '';
+        addSlide();
+        await loadWeeklyData();
+        await fetchPostForDate(postDateInput.value);
+    } catch (error) {
+        console.error(error);
+        showNotification(error.message, 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Submit Version';
+    }
+};
+
+window.initiateDelete = () => {
+    if (!currentSlot) return;
+    deleteModal.classList.replace('hidden','flex');
+    setTimeout(() => {
+        deleteModalContent.classList.replace('scale-95','scale-100');
+        deleteModalContent.classList.replace('opacity-0','opacity-100');
+    },10);
+};
+
+window.closeDeleteModal = () => {
+    deleteModalContent.classList.replace('scale-100','scale-95');
+    deleteModalContent.classList.replace('opacity-100','opacity-0');
+    setTimeout(()=>deleteModal.classList.replace('flex','hidden'),300);
+};
+
+window.executeDelete = async () => {
+    if (!currentSlot) return;
+    const button = document.getElementById('confirmDeleteBtn');
+    button.disabled = true;
+    button.innerText = 'Deleting...';
+    try {
+        const { data: versions } = await db.from('post_versions').select('id').eq('slot_id', currentSlot.id);
+        const versionIds = (versions || []).map(row => row.id);
+        let storagePaths = [];
+        if (versionIds.length) {
+            const { data: assets } = await db.from('media_assets').select('storage_path').in('version_id', versionIds);
+            storagePaths = (assets || []).map(row => row.storage_path).filter(Boolean);
+        }
+        const { error } = await db.from('post_slots').delete().eq('id', currentSlot.id);
+        if (error) throw error;
+        if (storagePaths.length) await db.storage.from(STORAGE_BUCKET).remove(storagePaths);
+        showNotification('Post removed completely.', 'success');
+        closeDeleteModal();
+        resetFormToNew(false);
+        await loadWeeklyData();
+    } catch (error) {
+        showNotification(`Deletion failed: ${error.message}`, 'error');
+    } finally {
+        button.disabled = false;
+        button.innerText = 'Confirm Delete';
+    }
+};
+
+window.generateApprovalLink = async () => {
+    const { monday } = getWeekInfo(viewDate);
+    const approvalUrl = new URL('../', window.location.href);
+    approvalUrl.searchParams.set('brand', BRAND_SLUG);
+    approvalUrl.searchParams.set('week', localISO(monday));
+    const link = approvalUrl.toString();
+    try {
+        await navigator.clipboard.writeText(link);
+    } catch (_) {
+        const area = document.createElement('textarea');
+        area.value = link;
+        document.body.appendChild(area);
+        area.select();
+        document.execCommand('copy');
+        area.remove();
+    }
+    showNotification('Approval link copied.', 'success');
+};
+
+window.toggleWeeklyApproval = async () => {
+    const { monday } = getWeekInfo(viewDate);
+    const nextStatus = isWeekApproved ? 'drafting' : 'pending_review';
+    const { error } = await db.from('weekly_approvals').upsert({ brand_id: BRAND_ID, week_start_date: localISO(monday), status: nextStatus }, { onConflict: 'brand_id,week_start_date' });
+    if (error) return showNotification(error.message, 'error');
+    showNotification(nextStatus === 'pending_review' ? 'Week sent for client review.' : 'Week returned to drafting.', 'success');
+    await loadWeeklyData();
+};
+
+window.resetFormToNew = (keepDate = true) => {
+    currentSlot = null;
+    currentVersions = [];
+    currentAssets = [];
+    pastedFiles = [];
+    previewAssets = [];
+    formTitle.innerText = 'Composer';
+    versionLabel.innerText = 'New Post';
+    captionInput.value = '';
+    mediaContainer.innerHTML = '';
+    addSlide();
+    renderExistingMedia([]);
+    setPostType('single');
+    deletePostBtn.classList.add('hidden');
+    historyContainer.innerHTML = '<p class="text-[10px] text-slate-400 italic">No post exists for this date.</p>';
+    updatePreview();
+};
+
+window.addSlide = () => {
+    const row = document.createElement('div');
+    row.className = 'flex items-center gap-3 p-3 border border-dashed border-slate-300 rounded-xl bg-slate-50/50';
+    row.innerHTML = `<div class="file-input-wrapper flex-1"><button class="w-full text-left text-xs text-slate-500 font-medium py-1 px-2">Select image or video...</button><input type="file" class="media-file-input" accept="image/*,video/*" onchange="handleFileSelect(this)"></div><button type="button" onclick="this.parentElement.remove();updatePreview();" class="text-rose-400 text-xs">Remove</button>`;
+    mediaContainer.appendChild(row);
+};
+
+window.handleFileSelect = input => {
+    const button = input.previousElementSibling;
+    if (input.files?.[0]) button.innerText = input.files[0].name;
+    updatePreview();
+};
+
+function clipboardFileFromBlob(blob, label = 'pasted-image') {
+    const mimeType = blob.type || 'image/png';
+    const subtype = mimeType.split('/')[1] || 'png';
+    const extension = subtype === 'jpeg' ? 'jpg' : subtype.replace(/[^a-z0-9]/gi, '') || 'png';
+    const unique = `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+    return new File([blob], `${label}-${unique}.${extension}`, { type: mimeType });
+}
+
+function setPasteStatus(message, isError = false) {
+    const status = document.getElementById('pasteStatus');
+    if (!status) return;
+    status.innerHTML = message;
+    status.className = `mt-1 text-[10px] ${isError ? 'text-rose-600' : 'text-[#137333]'}`;
+}
+
+function pendingMediaCount() {
+    const selectedFiles = Array.from(document.querySelectorAll('.media-file-input'))
+        .map(input => input.files?.[0])
+        .filter(Boolean);
+    return selectedFiles.length + pastedFiles.length;
+}
+
+function addClipboardFiles(files) {
+    const validFiles = files.filter(file => file && file.type.startsWith('image/'));
+    if (!validFiles.length) return false;
+
+    pastedFiles.push(...validFiles);
+    renderPastedFiles();
+
+    if (pendingMediaCount() > 1 && postType !== 'video') {
+        setPostType('carousel');
+    } else {
+        updatePreview();
+    }
+
+    const wording = validFiles.length === 1 ? 'Image pasted successfully.' : `${validFiles.length} images pasted successfully.`;
+    setPasteStatus(`${wording} You can paste more images to build a carousel.`);
+    showNotification(wording, 'success');
+    return true;
+}
+
+async function imageFileFromURL(url) {
+    if (!url || url.startsWith('blob:')) {
+        throw new Error('That copied image link cannot be read outside its original page.');
+    }
+
+    const response = await fetch(url, { mode: 'cors' });
+    if (!response.ok) throw new Error(`Could not read the copied image (${response.status}).`);
+
+    const blob = await response.blob();
+    if (!blob.type.startsWith('image/')) throw new Error('The copied item is not an image.');
+    return clipboardFileFromBlob(blob, 'copied-image');
+}
+
+function imageURLFromClipboardData(clipboardData) {
+    const html = clipboardData?.getData('text/html') || '';
+    if (html) {
+        const documentFragment = new DOMParser().parseFromString(html, 'text/html');
+        const image = documentFragment.querySelector('img');
+        if (image?.src) return image.src;
+    }
+
+    const text = (clipboardData?.getData('text/plain') || '').trim();
+    if (/^(data:image\/|https?:\/\/)/i.test(text)) return text;
+    return '';
+}
+
+async function processPasteEvent(event) {
+    const imageFiles = [];
+
+    for (const item of Array.from(event.clipboardData?.items || [])) {
+        if (!item.type.startsWith('image/')) continue;
+        const blob = item.getAsFile();
+        if (blob) imageFiles.push(clipboardFileFromBlob(blob));
+    }
+
+    if (imageFiles.length) {
+        event.preventDefault();
+        addClipboardFiles(imageFiles);
+        return;
+    }
+
+    const imageURL = imageURLFromClipboardData(event.clipboardData);
+    if (!imageURL) return; // Keep normal text pasting inside the caption box.
+
+    event.preventDefault();
+    setPasteStatus('Reading copied image…');
+    try {
+        const file = await imageFileFromURL(imageURL);
+        addClipboardFiles([file]);
+    } catch (error) {
+        console.error(error);
+        setPasteStatus('The page copied only an image link. Right-click the image and choose <strong>Copy image</strong>, then press Ctrl+V here.', true);
+        showNotification('Use “Copy image”, not “Copy image address”.', 'error');
+    }
+}
+
+window.pasteImageFromClipboard = async () => {
+    if (!navigator.clipboard?.read) {
+        setPasteStatus('Click inside this page and press <strong>Ctrl+V</strong> after copying the image.', true);
+        return showNotification('Press Ctrl+V to paste the copied image.', 'error');
+    }
+
+    setPasteStatus('Checking your clipboard…');
+    try {
+        const clipboardItems = await navigator.clipboard.read();
+        const files = [];
+
+        for (const clipboardItem of clipboardItems) {
+            const imageTypes = clipboardItem.types.filter(type => type.startsWith('image/'));
+            for (const imageType of imageTypes) {
+                const blob = await clipboardItem.getType(imageType);
+                files.push(clipboardFileFromBlob(blob));
+            }
+        }
+
+        if (addClipboardFiles(files)) return;
+
+        let copiedText = '';
+        try {
+            copiedText = await navigator.clipboard.readText();
+        } catch (_) {}
+
+        if (/^(data:image\/|https?:\/\/)/i.test(copiedText.trim())) {
+            const file = await imageFileFromURL(copiedText.trim());
+            addClipboardFiles([file]);
+            return;
+        }
+
+        setPasteStatus('No image was found. Copy the actual image first, then click here again.', true);
+        showNotification('No image found in the clipboard.', 'error');
+    } catch (error) {
+        console.error(error);
+        setPasteStatus('Clipboard access was blocked. Keep this page open and press <strong>Ctrl+V</strong>.', true);
+        showNotification('Press Ctrl+V to paste the image.', 'error');
+    }
+};
+
+window.removePastedFile = index => {
+    pastedFiles.splice(index, 1);
+    renderPastedFiles();
+    updatePreview();
+    setPasteStatus(pastedFiles.length ? `${pastedFiles.length} pasted image(s) ready.` : 'Copy an image and press <strong>Ctrl+V</strong> anywhere on this page.');
+};
+
+function renderPastedFiles() {
+    document.querySelectorAll('[data-pasted-row]').forEach(row => {
+        const oldURL = row.dataset.previewUrl;
+        if (oldURL) URL.revokeObjectURL(oldURL);
+        row.remove();
+    });
+
+    pastedFiles.forEach((file, index) => {
+        const previewURL = URL.createObjectURL(file);
+        const row = document.createElement('div');
+        row.dataset.pastedRow = 'true';
+        row.dataset.previewUrl = previewURL;
+        row.className = 'p-3 border border-[#b9dec5] bg-[#eef8f0] rounded-xl flex items-center gap-3';
+        row.innerHTML = `
+            <img src="${previewURL}" alt="Pasted image ${index + 1}" class="h-14 w-14 rounded-lg border border-white object-cover shadow-sm">
+            <div class="min-w-0 flex-1">
+                <p class="text-[10px] text-[#137333] font-bold uppercase">Pasted Image ${index + 1}</p>
+                <p class="truncate text-[9px] text-slate-500">${escapeHTML(file.name)} · ${(file.size / 1024).toFixed(0)} KB</p>
+            </div>
+            <button type="button" onclick="removePastedFile(${index})" class="rounded-lg px-2 py-1 text-xs font-bold text-rose-500 hover:bg-rose-50">Remove</button>`;
+        mediaContainer.appendChild(row);
+    });
+}
+
+window.addEventListener('paste', event => {
+    void processPasteEvent(event);
+});
+
+window.loadFeedbackRequests = async () => {
+    if (!feedbackRequestsContainer) return;
+    feedbackRequestsContainer.innerHTML = '<p class="text-[10px] text-slate-400 italic text-center py-4">Loading...</p>';
+    try {
+        const { data, error } = await db.from('feedback_requests').select('*').eq('brand_id', BRAND_ID).order('created_at', {ascending:false}).limit(20);
+        if (error) throw error;
+        feedbackRequestsContainer.innerHTML = data?.length ? data.map(request => `<div class="p-3 rounded-xl border ${request.status === 'resolved' ? 'border-slate-200 bg-slate-50' : 'border-amber-200 bg-amber-50'}"><div class="flex items-center justify-between gap-2 mb-1"><span class="text-[8px] font-bold uppercase ${request.request_type === 'call_requested' ? 'text-amber-700' : 'text-[#137333]'}">${escapeHTML(request.request_type.replace('_',' '))}</span><span class="text-[8px] text-slate-400">${new Date(request.created_at).toLocaleString('en-GB')}</span></div><p class="text-[10px] text-slate-700 whitespace-pre-wrap">${escapeHTML(request.message)}</p>${request.status !== 'resolved' ? `<button onclick="resolveFeedback('${request.id}')" class="mt-2 text-[8px] font-bold text-[#137333] uppercase hover:underline">Mark resolved</button>` : '<span class="mt-2 inline-block text-[8px] font-bold text-slate-400 uppercase">Resolved</span>'}</div>`).join('') : '<p class="text-[10px] text-slate-400 italic text-center py-4">No client messages yet.</p>';
+    } catch (error) {
+        feedbackRequestsContainer.innerHTML = `<p class="text-[10px] text-rose-500">${escapeHTML(error.message)}</p>`;
+    }
+};
+
+window.resolveFeedback = async id => {
+    const { error } = await db.from('feedback_requests').update({status:'resolved',resolved_at:new Date().toISOString()}).eq('id', id);
+    if (error) return showNotification(error.message,'error');
+    showNotification('Message marked resolved.','success');
+    loadFeedbackRequests();
+};
+
+
+async function openAdminMediaViewer() {
+    if (!activePreviewAssets.length) return;
+    const index = postType === 'carousel' ? Math.min(carouselIndex, activePreviewAssets.length - 1) : 0;
+    const asset = activePreviewAssets[index];
+    const url = assetURL(asset);
+    if (!url) return;
+
+    const viewer = document.getElementById('adminMediaViewer');
+    const content = document.getElementById('adminMediaViewerContent');
+    if (isVideoAsset(asset)) {
+        content.innerHTML = `<video src="${escapeHTML(url)}" autoplay playsinline controls></video>`;
+    } else {
+        content.innerHTML = `<img src="${escapeHTML(url)}" alt="Full-screen content preview">`;
+    }
+
+    viewer.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    try {
+        if (!document.fullscreenElement && viewer.requestFullscreen) {
+            await viewer.requestFullscreen();
+        }
+    } catch (_) {
+        // Full viewport remains available if browser fullscreen is blocked.
+    }
+}
+
+async function closeAdminMediaViewer() {
+    const viewer = document.getElementById('adminMediaViewer');
+    viewer.classList.add('hidden');
+    document.getElementById('adminMediaViewerContent').innerHTML = '';
+    document.body.style.overflow = '';
+    if (document.fullscreenElement) {
+        try { await document.exitFullscreen(); } catch (_) {}
+    }
+}
+
+document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !document.getElementById('adminMediaViewer').classList.contains('hidden')) {
+        closeAdminMediaViewer();
+    }
+});
+
+document.addEventListener('fullscreenchange', () => {
+    const viewer = document.getElementById('adminMediaViewer');
+    if (!document.fullscreenElement && viewer && !viewer.classList.contains('hidden')) {
+        viewer.classList.add('hidden');
+        document.getElementById('adminMediaViewerContent').innerHTML = '';
+        document.body.style.overflow = '';
+    }
+});
+
+function showNotification(message, type = 'success') {
+    toast.className = `fixed bottom-6 right-6 px-6 py-3 rounded-xl shadow-2xl text-white font-bold text-sm transform transition-all duration-300 z-[100] ${type === 'success' ? 'bg-[#137333]' : 'bg-rose-600'}`;
+    toast.innerText = message;
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateY(0)';
+    clearTimeout(showNotification.timer);
+    showNotification.timer = setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(24px)';
+    }, 4000);
+}
+
+captionInput.oninput = updatePreview;
+postDateInput.value = localISO(new Date());
+viewDate = new Date();
+mediaContainer.innerHTML = '';
+addSlide();
+loadBrandMetadata();
+loadWeeklyData();
+fetchPostForDate(postDateInput.value);
+</script>
+</body>
+</html>
