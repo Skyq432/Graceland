@@ -381,6 +381,7 @@ let postType = 'single';
 let viewDate = new Date();
 let isWeekApproved = false;
 let currentSlot = null;
+let daySlots = []; // MULTI_POST_PER_DAY_V1
 let currentVersions = [];
 let currentAssets = [];
 let pastedFiles = [];
@@ -522,6 +523,134 @@ window.updateApprovalUI = status => {
     }
 };
 
+
+function ensureDayPostsPanel() {
+    let panel = document.getElementById('dayPostsPanel');
+    if (panel) return panel;
+
+    panel = document.createElement('div');
+    panel.id = 'dayPostsPanel';
+    panel.className = 'mt-6 pt-5 border-t border-slate-100';
+    weekDaysGrid.insertAdjacentElement('afterend', panel);
+    return panel;
+}
+
+function aggregateDayStatus(rows) {
+    if (!rows?.length) return 'empty';
+    const statuses = rows.map(row => String(row.current_status || 'pending').toLowerCase());
+    if (statuses.includes('rejected')) return 'rejected';
+    if (statuses.every(status => status === 'approved')) return 'approved';
+    return 'pending';
+}
+
+function postStatusClasses(status) {
+    const value = String(status || 'pending').toLowerCase();
+    if (value === 'approved') return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+    if (value === 'rejected') return 'bg-rose-50 text-rose-700 border-rose-200';
+    return 'bg-amber-50 text-amber-700 border-amber-200';
+}
+
+function renderDayPostPicker() {
+    const panel = ensureDayPostsPanel();
+    const iso = postDateInput.value;
+    const date = iso ? parseLocalISO(iso) : new Date();
+    const label = date.toLocaleDateString('en-GB', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long'
+    });
+
+    const cards = daySlots.map((slot, index) => {
+        const selected = currentSlot?.id === slot.id;
+        const order = slot.slot_order || index + 1;
+        const status = String(slot.current_status || 'pending').replaceAll('_', ' ');
+        return `
+            <button type="button"
+                    onclick="selectPost('${slot.id}')"
+                    class="text-left rounded-xl border p-3 transition-all ${selected ? 'border-[#137333] bg-[#eef8f0] ring-1 ring-[#137333]' : 'border-slate-200 bg-white hover:border-slate-300'}">
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-[10px] font-extrabold text-[#0A234A] uppercase tracking-wider">Post ${order}</span>
+                    <span class="text-[8px] font-bold uppercase px-2 py-1 rounded-full border ${postStatusClasses(slot.current_status)}">${escapeHTML(status)}</span>
+                </div>
+            </button>`;
+    }).join('');
+
+    panel.innerHTML = `
+        <div class="flex items-center justify-between gap-3 mb-3">
+            <div>
+                <p class="text-[9px] font-bold uppercase tracking-widest text-slate-400">${escapeHTML(label)}</p>
+                <h4 class="text-sm font-extrabold text-[#0A234A]">${daySlots.length} scheduled post${daySlots.length === 1 ? '' : 's'}</h4>
+            </div>
+            <button type="button"
+                    onclick="createAnotherPost()"
+                    class="rounded-lg bg-[#137333] px-3 py-2 text-[9px] font-bold uppercase tracking-widest text-white hover:bg-[#0f5e2a]">
+                + Add Post
+            </button>
+        </div>
+        ${daySlots.length
+            ? `<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">${cards}</div>`
+            : `<div class="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-center text-[10px] text-slate-400">No post scheduled for this date yet. Use <strong>+ Add Post</strong> or start composing below.</div>`
+        }`;
+}
+
+window.selectPost = async slotId => {
+    const slot = daySlots.find(row => row.id === slotId);
+    if (!slot) return;
+    await loadSlot(slot);
+    renderDayPostPicker();
+};
+
+window.createAnotherPost = () => {
+    resetFormToNew(true);
+    formTitle.innerText = 'Create Another Post';
+    versionLabel.innerText = `New Post ${Math.max(0, ...daySlots.map((slot, index) => slot.slot_order || index + 1)) + 1}`;
+    historyContainer.innerHTML = '<p class="text-[10px] text-slate-400 italic">This will be a separate post for the selected date.</p>';
+    renderDayPostPicker();
+    captionInput.focus();
+};
+
+async function loadSlot(slot) {
+    currentSlot = slot;
+    deletePostBtn.classList.remove('hidden');
+    formTitle.innerText = `Edit Post ${slot.slot_order || 1}`;
+
+    const { data: versions, error: versionError } = await db.from('post_versions')
+        .select('*,comments(*)')
+        .eq('slot_id', slot.id)
+        .order('version_number', { ascending: false });
+    if (versionError) throw versionError;
+
+    currentVersions = versions || [];
+    renderHistory(currentVersions);
+
+    if (!currentVersions.length) {
+        currentAssets = [];
+        previewAssets = [];
+        captionInput.value = '';
+        versionLabel.innerText = `Post ${slot.slot_order || 1} - No Version`;
+        renderExistingMedia([]);
+        updatePreview();
+        return;
+    }
+
+    const latest = currentVersions[0];
+    captionInput.value = latest.caption || '';
+    versionLabel.innerText = `Post ${slot.slot_order || 1} · Version ${latest.version_number} - ${(slot.current_status || 'drafting').replaceAll('_',' ')}`;
+
+    const { data: assets, error: assetsError } = await db.from('media_assets')
+        .select('*')
+        .eq('version_id', latest.id)
+        .order('order_index');
+    if (assetsError) throw assetsError;
+
+    currentAssets = assets || [];
+    previewAssets = currentAssets;
+    renderExistingMedia(currentAssets);
+    inferPostType(currentAssets);
+    updatePreview();
+}
+
+
 async function loadWeeklyData() {
     const { monday, sunday } = getWeekInfo(viewDate);
     const startStr = localISO(monday);
@@ -530,33 +659,53 @@ async function loadWeeklyData() {
 
     try {
         const { data: slots, error: slotsError } = await db.from('post_slots')
-            .select('id,scheduled_date,current_status')
+            .select('id,scheduled_date,current_status,slot_order')
             .eq('brand_id', BRAND_ID)
             .gte('scheduled_date', startStr)
-            .lte('scheduled_date', endStr);
+            .lte('scheduled_date', endStr)
+            .order('scheduled_date', { ascending: true })
+            .order('slot_order', { ascending: true });
         if (slotsError) throw slotsError;
 
         const { data: approval, error: approvalError } = await db.from('weekly_approvals')
             .select('*').eq('brand_id', BRAND_ID).eq('week_start_date', startStr).maybeSingle();
         if (approvalError) throw approvalError;
+
         isWeekApproved = approval?.status === 'approved';
         updateApprovalUI(approval?.status || 'drafting');
 
         weekDaysGrid.innerHTML = '';
         const dayNames = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
         for (let i=0;i<7;i++) {
             const day = new Date(monday);
             day.setDate(day.getDate()+i);
             const iso = localISO(day);
-            const slot = slots?.find(row => row.scheduled_date === iso);
-            const status = slot?.current_status?.toLowerCase();
+            const dayRows = (slots || []).filter(row => row.scheduled_date === iso);
+            const status = aggregateDayStatus(dayRows);
             const selected = iso === postDateInput.value;
+
             let dot = '';
             if (status === 'approved') dot = 'dot-approved';
             else if (status === 'rejected') dot = 'dot-rejected';
-            else if (slot) dot = 'dot-pending';
-            weekDaysGrid.innerHTML += `<div onclick="selectDate('${iso}')" class="flex flex-col items-center gap-2 cursor-pointer group relative"><span class="text-[9px] font-bold ${selected ? 'text-[#137333]' : 'text-slate-400'} uppercase">${dayNames[i]}</span><div class="w-8 h-8 rounded-full day-circle transition-all flex items-center justify-center text-[10px] font-bold ${slot ? 'day-active shadow-sm' : 'bg-slate-50 text-slate-300'} ${selected ? 'day-selected' : 'group-hover:bg-slate-100'}">${day.getDate()}${dot ? `<div class="status-dot ${dot}"></div>` : ''}</div></div>`;
+            else if (dayRows.length) dot = 'dot-pending';
+
+            weekDaysGrid.innerHTML += `
+                <div onclick="selectDate('${iso}')" class="flex flex-col items-center gap-2 cursor-pointer group relative">
+                    <span class="text-[9px] font-bold ${selected ? 'text-[#137333]' : 'text-slate-400'} uppercase">${dayNames[i]}</span>
+                    <div class="relative w-9 h-9 rounded-full day-circle transition-all flex items-center justify-center text-[10px] font-bold ${dayRows.length ? 'day-active shadow-sm' : 'bg-slate-50 text-slate-300'} ${selected ? 'day-selected' : 'group-hover:bg-slate-100'}">
+                        ${day.getDate()}
+                        ${dayRows.length ? `<span class="absolute -top-2 -right-2 min-w-4 h-4 px-1 rounded-full bg-[#0A234A] text-white text-[8px] flex items-center justify-center">${dayRows.length}</span>` : ''}
+                        ${dot ? `<div class="status-dot ${dot}"></div>` : ''}
+                    </div>
+                </div>`;
         }
+
+        if (postDateInput.value) {
+            daySlots = (slots || []).filter(row => row.scheduled_date === postDateInput.value);
+            renderDayPostPicker();
+        }
+
         await loadFeedbackRequests();
     } catch (error) {
         console.error(error);
@@ -567,42 +716,29 @@ async function loadWeeklyData() {
 
 async function fetchPostForDate(iso) {
     historyContainer.innerHTML = '<p class="text-[10px] text-slate-400 italic">Fetching...</p>';
+
     try {
-        const { data: slot, error: slotError } = await db.from('post_slots').select('*').eq('brand_id', BRAND_ID).eq('scheduled_date', iso).maybeSingle();
+        const { data: slots, error: slotError } = await db.from('post_slots')
+            .select('*')
+            .eq('brand_id', BRAND_ID)
+            .eq('scheduled_date', iso)
+            .order('slot_order', { ascending: true });
         if (slotError) throw slotError;
-        if (!slot) {
+
+        daySlots = slots || [];
+
+        if (!daySlots.length) {
             resetFormToNew(false);
+            renderDayPostPicker();
             return;
         }
 
-        currentSlot = slot;
-        deletePostBtn.classList.remove('hidden');
-        formTitle.innerText = 'Edit Scheduled Post';
-        const { data: versions, error: versionError } = await db.from('post_versions').select('*,comments(*)').eq('slot_id', slot.id).order('version_number', { ascending: false });
-        if (versionError) throw versionError;
-        currentVersions = versions || [];
-        renderHistory(currentVersions);
+        const preserved = currentSlot && currentSlot.scheduled_date === iso
+            ? daySlots.find(row => row.id === currentSlot.id)
+            : null;
 
-        if (!currentVersions.length) {
-            currentAssets = [];
-            previewAssets = [];
-            captionInput.value = '';
-            versionLabel.innerText = 'No Version';
-            renderExistingMedia([]);
-            updatePreview();
-            return;
-        }
-
-        const latest = currentVersions[0];
-        captionInput.value = latest.caption || '';
-        versionLabel.innerText = `Version ${latest.version_number} — ${(slot.current_status || 'drafting').replace('_',' ')}`;
-        const { data: assets, error: assetsError } = await db.from('media_assets').select('*').eq('version_id', latest.id).order('order_index');
-        if (assetsError) throw assetsError;
-        currentAssets = assets || [];
-        previewAssets = currentAssets;
-        renderExistingMedia(currentAssets);
-        inferPostType(currentAssets);
-        updatePreview();
+        await loadSlot(preserved || daySlots[0]);
+        renderDayPostPicker();
     } catch (error) {
         console.error(error);
         showNotification(`Post load failed: ${error.message}`, 'error');
@@ -733,8 +869,24 @@ window.submitPost = async () => {
 
         let slotId = currentSlot?.id;
         if (!slotId) {
-            const { data: slot, error: slotError } = await db.from('post_slots').insert({ brand_id: BRAND_ID, scheduled_date: postDateInput.value, current_status: 'pending' }).select().single();
+            const { data: existingSlots, error: existingError } = await db.from('post_slots')
+                .select('id,slot_order')
+                .eq('brand_id', BRAND_ID)
+                .eq('scheduled_date', postDateInput.value);
+            if (existingError) throw existingError;
+
+            const nextOrder = Math.max(0, ...(existingSlots || []).map((row, index) => row.slot_order || index + 1)) + 1;
+            const { data: slot, error: slotError } = await db.from('post_slots')
+                .insert({
+                    brand_id: BRAND_ID,
+                    scheduled_date: postDateInput.value,
+                    current_status: 'pending',
+                    slot_order: nextOrder
+                })
+                .select()
+                .single();
             if (slotError) throw slotError;
+            currentSlot = slot;
             slotId = slot.id;
         } else {
             const { error: statusError } = await db.from('post_slots').update({ current_status: 'pending' }).eq('id', slotId);
@@ -756,7 +908,7 @@ window.submitPost = async () => {
             if (mediaError) throw mediaError;
         }
 
-        showNotification('Version submitted for review.', 'success');
+        showNotification(`Post ${currentSlot?.slot_order || 1} submitted for review.`, 'success');
         pastedFiles = [];
         mediaContainer.innerHTML = '';
         addSlide();
@@ -806,6 +958,7 @@ window.executeDelete = async () => {
         closeDeleteModal();
         resetFormToNew(false);
         await loadWeeklyData();
+        await fetchPostForDate(postDateInput.value);
     } catch (error) {
         showNotification(`Deletion failed: ${error.message}`, 'error');
     } finally {
@@ -848,16 +1001,18 @@ window.resetFormToNew = (keepDate = true) => {
     currentAssets = [];
     pastedFiles = [];
     previewAssets = [];
-    formTitle.innerText = 'Composer';
-    versionLabel.innerText = 'New Post';
+    formTitle.innerText = 'Create Scheduled Post';
+    const nextOrder = Math.max(0, ...daySlots.map((slot, index) => slot.slot_order || index + 1)) + 1;
+    versionLabel.innerText = `New Post ${nextOrder}`;
     captionInput.value = '';
     mediaContainer.innerHTML = '';
     addSlide();
     renderExistingMedia([]);
     setPostType('single');
     deletePostBtn.classList.add('hidden');
-    historyContainer.innerHTML = '<p class="text-[10px] text-slate-400 italic">No post exists for this date.</p>';
+    historyContainer.innerHTML = '<p class="text-[10px] text-slate-400 italic">Create a new post, or select an existing post above.</p>';
     updatePreview();
+    renderDayPostPicker();
 };
 
 window.addSlide = () => {
