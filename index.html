@@ -2381,7 +2381,8 @@ function ceoContentTitle(item) {
     if (!text) return item.assets?.length ? 'Content ready for review' : 'Caption-only post';
 
     const firstLine = text.split(/\n+/)[0].trim();
-    const firstSentence = firstLine.split(/(?<=[.!?])\s+/)[0].trim();
+    const sentenceMatch = firstLine.match(/^[\s\S]*?[.!?](?:\s|$)/);
+    const firstSentence = (sentenceMatch ? sentenceMatch[0] : firstLine).trim();
     const cleaned = (firstSentence || firstLine).replace(/\s+/g, ' ');
     return cleaned.length > 72 ? `${cleaned.slice(0, 69).trim()}...` : cleaned;
 }
