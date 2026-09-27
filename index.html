@@ -510,6 +510,80 @@
             display: block;
         }
 
+        /* --- UX refinements --- */
+        .toolbar { justify-content: flex-end; }
+        .toolbar-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: max(20px, env(safe-area-inset-bottom));
+            transform: translate(-50%, 20px);
+            max-width: min(92vw, 480px);
+            background: var(--brand-blue);
+            color: var(--white);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(10, 35, 74, 0.35);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s, transform 0.2s;
+            z-index: 3000;
+        }
+        .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+        .post-card.is-placeholder { opacity: 0.75; box-shadow: none; }
+        .post-card.is-placeholder .media-box { aspect-ratio: auto; height: 96px; cursor: default; }
+        .placeholder-note { font-size: 0.8rem; color: var(--text-muted); }
+
+        .caption { cursor: pointer; }
+
+        .screen-header {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: var(--white);
+            padding: 24px 0 12px;
+            margin-bottom: 8px;
+        }
+        .screen-x {
+            flex: 0 0 auto;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: #f1f5f9;
+            color: var(--text-muted);
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        .screen-x:hover { background: #e2e8f0; color: var(--text-main); }
+        .status-pill { margin: 0 0 10px; }
+        .rejection-note { margin: 0 0 12px; }
+        .btn-approved { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+        .btn-approved:disabled { opacity: 1; filter: none; cursor: default; }
+
+        /* Touch screens have no hover, so keep media controls visible */
+        @media (hover: none) {
+            .media-actions, .carousel-nav { opacity: 1; }
+        }
+
+        @media (max-width: 600px) {
+            .container { padding: 16px; }
+            .app-bar { padding: 18px; }
+            .brand img { height: 48px; width: 48px; }
+            .toolbar-actions { width: 100%; }
+            .toolbar-actions .btn { flex: 1 1 auto; }
+            .content-grid { grid-template-columns: 1fr; }
+        }
+
         .hidden { display: none !important; }
 
         .main-footer {
@@ -540,1265 +614,6 @@
         .footer-link:hover { background: var(--brand-orange); border-color: var(--brand-orange); transform: translateY(-2px); }
         .footer-bottom { border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 24px; font-size: 0.75rem; opacity: 0.6; margin-top: 24px; }
     
-/* =========================================================
-   CEO EXECUTIVE REVIEW UX — CEO_EXECUTIVE_UX_V1
-   ========================================================= */
-
-.dashboard-stats,
-.progress-container,
-.toolbar {
-    display: none !important;
-}
-
-.container {
-    max-width: 1240px;
-}
-
-.app-bar {
-    margin-bottom: 22px;
-}
-
-.ceo-summary {
-    background:
-        radial-gradient(circle at 90% 10%, rgba(245,180,0,.16), transparent 28%),
-        linear-gradient(135deg, #071b38 0%, var(--brand-blue) 58%, #123b68 100%);
-    color: #fff;
-    border-radius: 22px;
-    padding: 28px;
-    margin-bottom: 28px;
-    box-shadow: 0 18px 40px rgba(10,35,74,.18);
-    border: 1px solid rgba(255,255,255,.08);
-}
-
-.ceo-summary-top {
-    display: flex;
-    justify-content: space-between;
-    gap: 20px;
-    align-items: flex-start;
-    margin-bottom: 24px;
-}
-
-.ceo-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: .68rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: .12em;
-    color: #dce8f7;
-    margin-bottom: 7px;
-}
-
-.ceo-summary h2 {
-    font-size: clamp(1.45rem, 3vw, 2.15rem);
-    line-height: 1.12;
-    letter-spacing: -.035em;
-    margin: 0 0 7px;
-}
-
-.ceo-summary-sub {
-    color: rgba(255,255,255,.72);
-    font-size: .84rem;
-    max-width: 620px;
-}
-
-.ceo-progress-number {
-    min-width: 82px;
-    height: 82px;
-    border-radius: 50%;
-    border: 6px solid rgba(255,255,255,.16);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    background: rgba(255,255,255,.06);
-}
-
-.ceo-progress-number strong {
-    font-size: 1.28rem;
-    line-height: 1;
-}
-
-.ceo-progress-number span {
-    font-size: .55rem;
-    opacity: .72;
-    margin-top: 4px;
-    letter-spacing: .08em;
-}
-
-.ceo-metrics {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0,1fr));
-    gap: 10px;
-    margin-bottom: 16px;
-}
-
-.ceo-metric {
-    border: 1px solid rgba(255,255,255,.1);
-    background: rgba(255,255,255,.07);
-    border-radius: 14px;
-    padding: 13px 14px;
-}
-
-.ceo-metric strong {
-    display: block;
-    font-size: 1.35rem;
-    line-height: 1;
-    margin-bottom: 5px;
-}
-
-.ceo-metric span {
-    color: rgba(255,255,255,.68);
-    font-size: .64rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .07em;
-}
-
-.ceo-progress-track {
-    height: 7px;
-    border-radius: 99px;
-    background: rgba(255,255,255,.13);
-    overflow: hidden;
-    margin-bottom: 18px;
-}
-
-.ceo-progress-track > div {
-    height: 100%;
-    border-radius: inherit;
-    background: linear-gradient(90deg, #fff, var(--brand-gold));
-    transition: width .35s ease;
-}
-
-.ceo-review-tabs {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-.ceo-review-tab {
-    border: 1px solid rgba(255,255,255,.16);
-    background: rgba(255,255,255,.08);
-    color: #fff;
-    border-radius: 10px;
-    padding: 10px 14px;
-    font-family: inherit;
-    font-size: .73rem;
-    font-weight: 800;
-    cursor: pointer;
-}
-
-.ceo-review-tab.active {
-    background: #fff;
-    color: var(--brand-blue);
-    border-color: #fff;
-}
-
-.ceo-review-tab .count {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 21px;
-    height: 21px;
-    padding: 0 6px;
-    border-radius: 999px;
-    margin-left: 6px;
-    background: rgba(0,0,0,.08);
-    font-size: .66rem;
-}
-
-.ceo-review-board.content-grid {
-    display: block;
-}
-
-.ceo-day {
-    margin-bottom: 20px;
-    background: #fff;
-    border: 1px solid #e8edf3;
-    border-radius: 18px;
-    overflow: hidden;
-    box-shadow: 0 5px 18px rgba(15,23,42,.045);
-}
-
-.ceo-day-header {
-    width: 100%;
-    border: 0;
-    background: #fff;
-    padding: 17px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 14px;
-    cursor: pointer;
-    text-align: left;
-    font-family: inherit;
-}
-
-.ceo-day-header:hover {
-    background: #fbfcfe;
-}
-
-.ceo-day-title {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-width: 0;
-}
-
-.ceo-day-date {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    background: var(--brand-blue-light);
-    color: var(--brand-blue);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 auto;
-}
-
-.ceo-day-date strong {
-    font-size: 1rem;
-    line-height: 1;
-}
-
-.ceo-day-date span {
-    font-size: .54rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    margin-top: 3px;
-}
-
-.ceo-day-heading strong {
-    display: block;
-    color: var(--brand-blue);
-    font-size: .87rem;
-    text-transform: uppercase;
-    letter-spacing: .045em;
-}
-
-.ceo-day-heading span {
-    color: #7b8a9e;
-    font-size: .71rem;
-    display: block;
-    margin-top: 2px;
-}
-
-.ceo-day-state {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    flex: 0 0 auto;
-}
-
-.ceo-day-pill {
-    padding: 6px 9px;
-    border-radius: 999px;
-    font-size: .59rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-}
-
-.ceo-day-pill.done {
-    background: #ecfdf5;
-    color: #047857;
-}
-
-.ceo-day-pill.review {
-    background: #fffbeb;
-    color: #b45309;
-}
-
-.ceo-day-pill.changes {
-    background: #fff1f2;
-    color: #be123c;
-}
-
-.ceo-chevron {
-    color: #94a3b8;
-    transition: transform .2s ease;
-    font-size: .8rem;
-}
-
-.ceo-day.collapsed .ceo-chevron {
-    transform: rotate(-90deg);
-}
-
-.ceo-day-body {
-    padding: 0 18px 18px;
-}
-
-.ceo-day.collapsed .ceo-day-body {
-    display: none;
-}
-
-.ceo-post-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(285px, 1fr));
-    gap: 16px;
-}
-
-.ceo-post-card {
-    background: #fff;
-    border: 1px solid #e6ebf1;
-    border-radius: 16px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-}
-
-.ceo-post-card.approved {
-    border-color: #cdeede;
-}
-
-.ceo-post-card.rejected {
-    border-color: #fecdd3;
-}
-
-.ceo-post-media {
-    height: 310px;
-    background: #f2f5f8;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    cursor: zoom-in;
-}
-
-.ceo-post-media .carousel-container,
-.ceo-post-media .carousel-item,
-.ceo-post-media img,
-.ceo-post-media video,
-.ceo-post-media iframe {
-    width: 100%;
-    height: 100%;
-}
-
-.ceo-post-media img,
-.ceo-post-media video,
-.ceo-post-media iframe {
-    object-fit: contain;
-    border: 0;
-    background: #f2f5f8;
-}
-
-.ceo-post-media .carousel-nav {
-    opacity: 1;
-}
-
-.ceo-post-body {
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-}
-
-.ceo-post-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 9px;
-}
-
-.ceo-post-order {
-    color: #7c8ca0;
-    font-size: .61rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: .075em;
-}
-
-.ceo-content-type {
-    font-size: .58rem;
-    padding: 5px 8px;
-    background: #f1f5f9;
-    color: #64748b;
-    border-radius: 999px;
-    font-weight: 800;
-    text-transform: uppercase;
-}
-
-.ceo-post-title {
-    font-size: .95rem;
-    color: var(--brand-blue);
-    font-weight: 800;
-    line-height: 1.3;
-    margin-bottom: 8px;
-}
-
-.ceo-caption {
-    color: #526174;
-    font-size: .8rem;
-    line-height: 1.55;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    white-space: pre-wrap;
-    margin-bottom: 10px;
-}
-
-.ceo-caption.expanded {
-    display: block;
-    -webkit-line-clamp: unset;
-}
-
-.ceo-caption-tools {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 14px;
-}
-
-.ceo-text-action {
-    background: transparent;
-    border: 0;
-    color: var(--brand-blue);
-    font-family: inherit;
-    font-size: .66rem;
-    font-weight: 800;
-    cursor: pointer;
-    padding: 4px 0;
-}
-
-.ceo-text-action + .ceo-text-action {
-    margin-left: 9px;
-}
-
-.ceo-card-actions {
-    display: grid;
-    gap: 8px;
-    margin-top: auto;
-}
-
-.ceo-approve {
-    width: 100%;
-    border: 0;
-    border-radius: 11px;
-    padding: 12px 14px;
-    background: var(--brand-blue);
-    color: #fff;
-    font-family: inherit;
-    font-size: .78rem;
-    font-weight: 800;
-    cursor: pointer;
-    transition: transform .15s ease, background .15s ease;
-}
-
-.ceo-approve:hover {
-    background: #043a61;
-    transform: translateY(-1px);
-}
-
-.ceo-change {
-    width: 100%;
-    border: 1px solid #e2e8f0;
-    border-radius: 11px;
-    padding: 10px 12px;
-    background: #fff;
-    color: #64748b;
-    font-family: inherit;
-    font-size: .72rem;
-    font-weight: 800;
-    cursor: pointer;
-}
-
-.ceo-approved-state,
-.ceo-rejected-state {
-    border-radius: 11px;
-    padding: 11px 12px;
-    text-align: center;
-    font-size: .72rem;
-    font-weight: 800;
-}
-
-.ceo-approved-state {
-    background: #ecfdf5;
-    color: #047857;
-}
-
-.ceo-rejected-state {
-    background: #fff1f2;
-    color: #be123c;
-}
-
-.ceo-empty-state {
-    background: #fff;
-    border: 1px solid #e8edf3;
-    border-radius: 18px;
-    padding: 52px 24px;
-    text-align: center;
-    box-shadow: 0 5px 18px rgba(15,23,42,.04);
-}
-
-.ceo-empty-icon {
-    width: 62px;
-    height: 62px;
-    margin: 0 auto 16px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #ecfdf5;
-    color: #047857;
-    font-size: 1.65rem;
-    font-weight: 800;
-}
-
-.ceo-empty-state h3 {
-    color: var(--brand-blue);
-    font-size: 1.15rem;
-    margin-bottom: 7px;
-}
-
-.ceo-empty-state p {
-    color: #708096;
-    max-width: 560px;
-    margin: 0 auto 18px;
-    font-size: .82rem;
-    line-height: 1.6;
-}
-
-.ceo-category-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    margin: 15px 0 18px;
-}
-
-.ceo-category {
-    border: 1px solid #dfe6ee;
-    background: #fff;
-    color: #526174;
-    border-radius: 9px;
-    padding: 9px 7px;
-    font-family: inherit;
-    font-size: .7rem;
-    font-weight: 800;
-    cursor: pointer;
-}
-
-.ceo-category.active {
-    border-color: var(--brand-blue);
-    background: var(--brand-blue-light);
-    color: var(--brand-blue);
-}
-
-.ceo-quick-notes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin: 10px 0 14px;
-}
-
-.ceo-quick-note {
-    border: 1px solid #e2e8f0;
-    background: #f8fafc;
-    color: #526174;
-    border-radius: 999px;
-    padding: 6px 9px;
-    font-family: inherit;
-    font-size: .62rem;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.feedback-section {
-    margin-top: 28px;
-    box-shadow: none;
-    border: 1px solid #e8edf3;
-}
-
-@media (max-width: 760px) {
-    .container {
-        padding: 14px;
-    }
-
-    .app-bar {
-        padding: 18px;
-        border-radius: 16px;
-    }
-
-    .brand img {
-        width: 50px;
-        height: 50px;
-    }
-
-    .ceo-summary {
-        padding: 20px;
-        border-radius: 17px;
-    }
-
-    .ceo-summary-top {
-        align-items: center;
-    }
-
-    .ceo-progress-number {
-        min-width: 68px;
-        height: 68px;
-        border-width: 5px;
-    }
-
-    .ceo-metrics {
-        grid-template-columns: repeat(2, minmax(0,1fr));
-    }
-
-    .ceo-day-header {
-        padding: 14px;
-    }
-
-    .ceo-day-body {
-        padding: 0 12px 12px;
-    }
-
-    .ceo-post-list {
-        grid-template-columns: 1fr;
-    }
-
-    .ceo-post-media {
-        height: min(68vh, 430px);
-    }
-
-    .ceo-category-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .week-switcher {
-        width: 100%;
-        justify-content: space-between;
-    }
-}
-
-
-/* =========================================================
-   CEO SIMPLE HEADER — CEO_SIMPLE_HEADER_V1
-   ========================================================= */
-
-.ceo-summary {
-    padding: 22px 26px !important;
-    margin-bottom: 22px !important;
-    border-radius: 18px !important;
-    background: linear-gradient(135deg, #071b38 0%, var(--brand-blue) 100%) !important;
-}
-
-.ceo-summary-top {
-    margin-bottom: 16px !important;
-    align-items: center !important;
-}
-
-.ceo-summary h2 {
-    font-size: clamp(1.35rem, 2.6vw, 1.9rem) !important;
-    margin-bottom: 5px !important;
-}
-
-.ceo-summary-sub {
-    font-size: .78rem !important;
-}
-
-.ceo-eyebrow {
-    font-size: .6rem !important;
-    margin-bottom: 5px !important;
-    opacity: .9;
-}
-
-.ceo-progress-number,
-.ceo-metrics {
-    display: none !important;
-}
-
-.ceo-progress-track {
-    height: 5px !important;
-    margin-bottom: 14px !important;
-    background: rgba(255,255,255,.13) !important;
-}
-
-.ceo-review-tabs {
-    gap: 7px !important;
-}
-
-.ceo-review-tab {
-    padding: 8px 11px !important;
-    font-size: .68rem !important;
-    border-radius: 9px !important;
-}
-
-.ceo-review-tab .count {
-    min-width: 18px !important;
-    height: 18px !important;
-    font-size: .6rem !important;
-    margin-left: 4px !important;
-}
-
-/* Hide the third utility button in the old executive header. */
-.ceo-review-tabs .ceo-review-tab:nth-child(3) {
-    display: none !important;
-}
-
-.ceo-simple-progress-note {
-    color: rgba(255,255,255,.63);
-    font-size: .66rem;
-    font-weight: 700;
-    margin-left: auto;
-    white-space: nowrap;
-}
-
-@media (max-width: 760px) {
-    .ceo-summary {
-        padding: 17px !important;
-    }
-
-    .ceo-summary-top {
-        margin-bottom: 13px !important;
-    }
-
-    .ceo-review-tabs {
-        width: 100%;
-    }
-
-    .ceo-simple-progress-note {
-        width: 100%;
-        margin-left: 0;
-        margin-top: 2px;
-    }
-}
-
-
-/* =========================================================
-   CEO MINIMAL REVIEW BOARD — CEO_MINIMAL_BOARD_V1
-   ========================================================= */
-
-/* Remove the large executive summary card completely */
-.ceo-summary {
-    display: none !important;
-}
-
-/* Keep the page airy and white */
-body {
-    background: #f7f9fc !important;
-}
-
-.container {
-    max-width: 1240px !important;
-}
-
-/* Minimal review bar - NOT a card */
-.ceo-minimal-bar {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 18px;
-    flex-wrap: wrap;
-    margin: 6px 0 24px;
-    padding: 0 4px;
-}
-
-.ceo-minimal-title {
-    min-width: 220px;
-}
-
-.ceo-minimal-title .label {
-    color: #94a3b8;
-    font-size: .61rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: .11em;
-    margin-bottom: 4px;
-}
-
-.ceo-minimal-title h2 {
-    margin: 0;
-    color: var(--brand-blue);
-    font-size: 1.2rem;
-    line-height: 1.2;
-    letter-spacing: -.02em;
-}
-
-.ceo-minimal-title p {
-    margin: 5px 0 0;
-    color: #64748b;
-    font-size: .74rem;
-}
-
-.ceo-minimal-tabs {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-}
-
-.ceo-minimal-tab {
-    border: 1px solid #dfe6ee;
-    background: #fff;
-    color: #64748b;
-    border-radius: 9px;
-    padding: 8px 12px;
-    font-family: inherit;
-    font-size: .68rem;
-    font-weight: 800;
-    cursor: pointer;
-    transition: all .15s ease;
-}
-
-.ceo-minimal-tab:hover {
-    border-color: #b9c6d5;
-}
-
-.ceo-minimal-tab.active {
-    background: var(--brand-blue);
-    border-color: var(--brand-blue);
-    color: #fff;
-}
-
-.ceo-minimal-tab .count {
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    min-width: 18px;
-    height: 18px;
-    padding: 0 5px;
-    margin-left: 4px;
-    border-radius: 999px;
-    background: rgba(148,163,184,.15);
-    font-size: .58rem;
-}
-
-.ceo-minimal-tab.active .count {
-    background: rgba(255,255,255,.16);
-}
-
-/* Remove "card inside card" feeling from day containers */
-.ceo-day {
-    background: transparent !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
-    margin-bottom: 34px !important;
-    overflow: visible !important;
-}
-
-.ceo-day-header {
-    background: transparent !important;
-    padding: 0 2px 12px !important;
-    border-bottom: 1px solid #dfe6ee !important;
-    cursor: pointer;
-}
-
-.ceo-day-header:hover {
-    background: transparent !important;
-}
-
-.ceo-day-date {
-    width: 38px !important;
-    height: 38px !important;
-    border-radius: 10px !important;
-    background: #fff !important;
-    border: 1px solid #e2e8f0 !important;
-    box-shadow: 0 1px 3px rgba(15,23,42,.04);
-}
-
-.ceo-day-heading strong {
-    font-size: .8rem !important;
-}
-
-.ceo-day-heading span {
-    font-size: .66rem !important;
-}
-
-.ceo-day-pill {
-    padding: 5px 8px !important;
-    font-size: .55rem !important;
-}
-
-.ceo-day-body {
-    padding: 16px 0 0 !important;
-}
-
-/* Clean, balanced post grid */
-.ceo-post-list {
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 20px !important;
-    align-items: stretch !important;
-}
-
-/* The actual posts remain white cards */
-.ceo-post-card {
-    border-radius: 15px !important;
-    border: 1px solid #e3e8ef !important;
-    background: #fff !important;
-    box-shadow: 0 4px 14px rgba(15,23,42,.045) !important;
-    overflow: hidden !important;
-    min-width: 0 !important;
-}
-
-.ceo-post-card.approved {
-    border-color: #cde9db !important;
-}
-
-.ceo-post-card.rejected {
-    border-color: #f6ccd3 !important;
-}
-
-/* Give media a consistent, premium presentation */
-.ceo-post-media {
-    height: 420px !important;
-    background: #f3f5f8 !important;
-    border-bottom: 1px solid #edf1f5;
-}
-
-.ceo-post-media img,
-.ceo-post-media video,
-.ceo-post-media iframe,
-.ceo-post-media .carousel-item {
-    object-fit: contain !important;
-    background: #f3f5f8 !important;
-}
-
-/* Cleaner content hierarchy */
-.ceo-post-body {
-    padding: 18px !important;
-}
-
-.ceo-post-meta {
-    margin-bottom: 10px !important;
-}
-
-.ceo-post-order {
-    font-size: .58rem !important;
-    color: #94a3b8 !important;
-}
-
-.ceo-content-type {
-    background: #f4f6f8 !important;
-    padding: 5px 8px !important;
-    font-size: .56rem !important;
-}
-
-.ceo-post-title {
-    font-size: 1rem !important;
-    line-height: 1.35 !important;
-    margin-bottom: 9px !important;
-}
-
-.ceo-caption {
-    font-size: .78rem !important;
-    line-height: 1.6 !important;
-    color: #5b697a !important;
-    margin-bottom: 7px !important;
-    -webkit-line-clamp: 3 !important;
-}
-
-.ceo-caption-tools {
-    margin-bottom: 16px !important;
-}
-
-.ceo-text-action {
-    font-size: .63rem !important;
-}
-
-.ceo-card-actions {
-    grid-template-columns: 1fr 1fr !important;
-    gap: 9px !important;
-}
-
-.ceo-approve,
-.ceo-change {
-    min-height: 42px !important;
-    padding: 10px 12px !important;
-}
-
-.ceo-change {
-    background: #f8fafc !important;
-}
-
-/* Approved / rejected state should be clean and compact */
-.ceo-approved-state,
-.ceo-rejected-state {
-    grid-column: 1 / -1;
-    padding: 10px 12px !important;
-}
-
-/* "all caught up" remains white and simple */
-.ceo-empty-state {
-    box-shadow: none !important;
-    border: 1px solid #e3e8ef !important;
-    padding: 48px 24px !important;
-}
-
-/* Hide old original dashboard remnants if any */
-.dashboard-stats,
-.progress-container,
-.toolbar {
-    display: none !important;
-}
-
-@media (max-width: 900px) {
-    .ceo-post-list {
-        grid-template-columns: 1fr !important;
-    }
-
-    .ceo-post-media {
-        height: min(70vh, 520px) !important;
-    }
-}
-
-@media (max-width: 620px) {
-    .container {
-        padding: 12px !important;
-    }
-
-    .ceo-minimal-bar {
-        align-items: flex-start;
-        margin-bottom: 20px;
-    }
-
-    .ceo-minimal-tabs {
-        width: 100%;
-    }
-
-    .ceo-minimal-tab {
-        flex: 1;
-    }
-
-    .ceo-day-state .ceo-day-pill {
-        display: none;
-    }
-
-    .ceo-post-media {
-        height: min(64vh, 430px) !important;
-    }
-
-    .ceo-card-actions {
-        grid-template-columns: 1fr !important;
-    }
-}
-
-
-/* CEO_PRO_REVIEW_LAYOUT_V1 */
-
-/* Restore summary area */
-.dashboard-stats {
-    display: grid !important;
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    gap: 14px !important;
-    margin: 0 0 18px !important;
-}
-.stat-card {
-    padding: 18px 14px !important;
-    border-radius: 14px !important;
-    box-shadow: 0 3px 10px rgba(15,23,42,.06) !important;
-    border: 1px solid #e8edf3 !important;
-}
-.stat-card span { font-size: 1.45rem !important; }
-.stat-label {
-    font-size: .66rem !important;
-    letter-spacing: .045em !important;
-}
-.progress-container {
-    display: block !important;
-    height: 7px !important;
-    margin-bottom: 20px !important;
-    background: #e6ebf1 !important;
-}
-.toolbar {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    gap: 12px !important;
-    margin-bottom: 28px !important;
-}
-.toolbar > div:last-child { margin-left: auto; }
-.toolbar .btn {
-    min-height: 40px !important;
-    padding: 9px 13px !important;
-    font-size: .72rem !important;
-}
-
-/* Keep minimal week bar */
-.ceo-minimal-bar { margin-bottom: 18px !important; }
-.ceo-minimal-title h2 { font-size: 1.08rem !important; }
-.ceo-minimal-title p { font-size: .7rem !important; }
-
-/* Professional day grouping */
-.ceo-day {
-    margin-bottom: 34px !important;
-}
-.ceo-day-header {
-    padding-bottom: 11px !important;
-}
-.ceo-day-heading strong {
-    font-size: .82rem !important;
-}
-.ceo-day-heading span {
-    font-size: .64rem !important;
-}
-
-/* One post per row */
-.ceo-post-list {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 16px !important;
-}
-.ceo-post-card {
-    display: grid !important;
-    grid-template-columns: minmax(280px, 38%) 1fr !important;
-    min-height: 360px !important;
-    border-radius: 16px !important;
-    border: 1px solid #e2e8f0 !important;
-    background: #fff !important;
-    box-shadow: 0 4px 16px rgba(15,23,42,.05) !important;
-    overflow: hidden !important;
-    transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
-}
-.ceo-post-card:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 7px 22px rgba(15,23,42,.07) !important;
-}
-.ceo-post-card.approved {
-    border-color: #bfe5d1 !important;
-}
-.ceo-post-card.rejected {
-    border-color: #f2c7ce !important;
-}
-
-/* Media */
-.ceo-post-media {
-    height: 100% !important;
-    min-height: 360px !important;
-    border-bottom: 0 !important;
-    border-right: 1px solid #edf1f5 !important;
-    background: #f5f7fa !important;
-}
-.ceo-post-media img,
-.ceo-post-media video,
-.ceo-post-media iframe,
-.ceo-post-media .carousel-item,
-.ceo-post-media .carousel-container {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: contain !important;
-    background: #f5f7fa !important;
-}
-
-/* Content panel */
-.ceo-post-body {
-    padding: 24px 26px !important;
-    display: flex !important;
-    flex-direction: column !important;
-}
-.ceo-post-meta { margin-bottom: 13px !important; }
-.ceo-post-order {
-    font-size: .6rem !important;
-    letter-spacing: .08em !important;
-}
-.ceo-content-type {
-    padding: 5px 9px !important;
-    font-size: .57rem !important;
-}
-.ceo-post-title {
-    font-size: 1.08rem !important;
-    line-height: 1.38 !important;
-    margin-bottom: 11px !important;
-    max-width: 720px;
-}
-.ceo-caption {
-    font-size: .8rem !important;
-    line-height: 1.65 !important;
-    color: #5f6d7e !important;
-    margin-bottom: 8px !important;
-    -webkit-line-clamp: 4 !important;
-    max-width: 760px;
-}
-.ceo-caption-tools { margin-bottom: 22px !important; }
-.ceo-text-action { font-size: .64rem !important; }
-
-.ceo-card-actions {
-    display: grid !important;
-    grid-template-columns: minmax(140px, 180px) minmax(160px, 220px) !important;
-    gap: 10px !important;
-    margin-top: auto !important;
-    justify-content: start !important;
-}
-.ceo-approve,
-.ceo-change {
-    min-height: 43px !important;
-    border-radius: 10px !important;
-    font-size: .72rem !important;
-}
-.ceo-approved-state,
-.ceo-rejected-state {
-    grid-column: 1 / -1 !important;
-    max-width: 420px;
-    text-align: left !important;
-    padding: 11px 13px !important;
-}
-
-/* Media tools */
-.ceo-post-media .media-actions {
-    opacity: 1 !important;
-    top: 12px !important;
-    right: 12px !important;
-}
-.ceo-post-media .action-icon-btn {
-    width: 34px !important;
-    height: 34px !important;
-    border-radius: 9px !important;
-}
-
-@media (max-width: 980px) {
-    .dashboard-stats {
-        grid-template-columns: repeat(2, minmax(0,1fr)) !important;
-    }
-    .ceo-post-card {
-        grid-template-columns: 1fr !important;
-        min-height: 0 !important;
-    }
-    .ceo-post-media {
-        height: min(66vh, 480px) !important;
-        min-height: 320px !important;
-        border-right: 0 !important;
-        border-bottom: 1px solid #edf1f5 !important;
-    }
-}
-
-@media (max-width: 620px) {
-    .dashboard-stats {
-        grid-template-columns: repeat(2, minmax(0,1fr)) !important;
-        gap: 9px !important;
-    }
-    .stat-card { padding: 14px 10px !important; }
-
-    .toolbar {
-        align-items: stretch !important;
-        flex-direction: column !important;
-    }
-    .toolbar > div:last-child {
-        width: 100%;
-        display: grid !important;
-        grid-template-columns: 1fr 1fr !important;
-        gap: 8px !important;
-        margin-left: 0 !important;
-    }
-    .toolbar > div:last-child .btn:first-child {
-        grid-column: 1 / -1;
-    }
-
-    .ceo-post-body { padding: 18px !important; }
-    .ceo-post-media {
-        height: min(62vh, 420px) !important;
-        min-height: 280px !important;
-    }
-    .ceo-card-actions {
-        grid-template-columns: 1fr !important;
-    }
-}
-
 </style>
 </head>
 <body>
@@ -1823,8 +638,8 @@ body {
     <!-- Stats Summary -->
     <div class="dashboard-stats">
         <div class="stat-card"><span id="approved-count" style="color: var(--success);">0</span><div class="stat-label">Approved</div></div>
-        <div class="stat-card"><span id="pending-count" style="color: var(--warning);">0</span><div class="stat-label">Pending</div></div>
-        <div class="stat-card"><span id="rejected-count" style="color: var(--danger);">0</span><div class="stat-label">Rejected</div></div>
+        <div class="stat-card"><span id="pending-count" style="color: var(--warning);">0</span><div class="stat-label">To Review</div></div>
+        <div class="stat-card"><span id="rejected-count" style="color: var(--danger);">0</span><div class="stat-label">Edits Requested</div></div>
         <div class="stat-card"><span id="progressPct">0%</span><div class="stat-label">Progress</div></div>
     </div>
     <div class="progress-container">
@@ -1833,8 +648,7 @@ body {
 
     <!-- Quick Actions -->
     <div class="toolbar">
-        <div id="notice" style="font-size: 0.8rem; font-weight: 600; color: var(--brand-blue); min-height: 1.2rem;"></div>
-        <div style="display: flex; gap: 8px;">
+        <div class="toolbar-actions">
             <button class="btn btn-ghost-dark" onclick="viewAllCaptions()" title="View all captions">📋 Captions</button>
             <button class="btn btn-primary" onclick="bulkApprove()">✓ Approve Week</button>
             <button class="btn btn-danger-light" onclick="bulkReject()">✗ Request Week Edits</button>
@@ -1872,13 +686,18 @@ body {
     </footer>
 </div>
 
+<div id="notice" class="toast" role="status" aria-live="polite"></div>
+
 <!-- Modal Screen -->
-<div id="screen" class="hidden" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1000; display:flex; align-items:center; justify-content:center; padding:20px; backdrop-filter: blur(4px);">
-    <div style="background:var(--white); padding:32px; border-radius:24px; max-width:600px; width:100%; max-height: 85vh; overflow-y: auto;">
-        <h2 id="screen-title" style="margin-bottom: 8px; color: var(--brand-blue);">Notice</h2>
+<div id="screen" class="hidden" onclick="if (event.target === this) closeScreen()" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1000; display:flex; align-items:center; justify-content:center; padding:20px; backdrop-filter: blur(4px);">
+    <div style="background:var(--white); padding:0 32px 32px; border-radius:24px; max-width:600px; width:100%; max-height: 85vh; overflow-y: auto;">
+        <div class="screen-header">
+            <h2 id="screen-title" style="color: var(--brand-blue);">Notice</h2>
+            <button class="screen-x" onclick="closeScreen()" title="Close" aria-label="Close">✕</button>
+        </div>
         <div id="screen-body" style="margin-bottom: 24px;"></div>
         <div id="screen-actions" style="display: flex; gap: 8px;">
-            <button id="screen-close-btn" class="btn btn-primary" style="width: 100%;" onclick="closeScreen()">Close</button>
+            <button id="screen-close-btn" class="btn btn-ghost-dark" style="width: 100%;" onclick="closeScreen()">Close</button>
         </div>
     </div>
 </div>
@@ -1911,6 +730,16 @@ let carouselIntervals = {};
 const ICON_EXPAND = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
 const ICON_COPY = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>`;
 const ICON_DL = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
+
+const STATUS_LABELS = {
+    pending: 'Awaiting your review',
+    approved: 'Approved',
+    rejected: 'Edits requested'
+};
+
+function isAwaitingReview(item) {
+    return ['pending', 'pending_review', 'drafting'].includes(String(item.status || '').toLowerCase());
+}
 
 function escapeHTML(value = '') {
     return String(value).replace(/[&<>'"]/g, ch => ({
@@ -1985,7 +814,7 @@ async function loadWeekData() {
 
     try {
         const { data: slots, error } = await db.from('post_slots')
-            .select(`id, scheduled_date, current_status, slot_order, post_versions(id, version_number, caption, is_approved, media_assets(file_url, media_type, order_index))`)
+            .select(`id, scheduled_date, current_status, slot_order, post_versions(id, version_number, caption, is_approved, media_assets(file_url, media_type, order_index), comments(*))`)
             .eq('brand_id', currentBrand.id)
             .gte('scheduled_date', formatLocalDate(start))
             .lt('scheduled_date', formatLocalDate(end))
@@ -2019,15 +848,20 @@ async function loadWeekData() {
                 const versions = slot.post_versions || [];
                 const latest = [...versions].sort((a, b) => b.version_number - a.version_number)[0];
                 carouselIndices[slot.id] = 0;
+                const clientNotes = (latest?.comments || [])
+                    .filter(comment => comment.author_role === 'client')
+                    .sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')));
 
                 items.push({
                     id: slot.id,
                     version_id: latest?.id || null,
                     date: new Date(date),
-                    postNumber: slot.slot_order || index + 1,
+                    postNumber: index + 1,
+                    postCount: daySlots.length,
                     status: slot.current_status || 'pending',
                     caption: latest?.caption || '',
                     assets: (latest?.media_assets || []).sort((a, b) => a.order_index - b.order_index),
+                    lastNote: clientNotes.length ? clientNotes[clientNotes.length - 1].content : '',
                     isEmpty: false
                 });
             });
@@ -2089,20 +923,37 @@ function renderCards() {
             mediaHTML = '<div style="height:100%;width:100%;display:flex;align-items:center;justify-content:center;background:#f8fafc;color:#94a3b8;">Caption-only post</div>';
         }
 
-        const status = item.status === 'pending_review' ? 'pending' : item.status;
+        const status = isAwaitingReview(item) ? 'pending' : item.status;
         const card = document.createElement('article');
-        card.className = `post-card ${item.isEmpty ? 'is-placeholder' : ''}`;
+        card.className = `post-card ${item.isEmpty ? 'is-placeholder' : `is-${status}`}`;
+        const badgeRow = `<div class="badge-row"><span class="day-badge">${dateText}${item.postCount > 1 ? ` · POST ${item.postNumber} OF ${item.postCount}` : ''}</span><span class="type-badge">${item.isEmpty ? 'SCHEDULED' : (multiple ? 'CAROUSEL' : (item.assets[0]?.media_type === 'video' ? 'VIDEO' : 'POST'))}</span></div>`;
+
+        if (item.isEmpty) {
+            card.innerHTML = `
+                <div class="media-box">${mediaHTML}</div>
+                <div class="card-details">${badgeRow}<p class="placeholder-note">Content for this day is still being prepared.</p></div>`;
+            grid.appendChild(card);
+            return;
+        }
+
+        const canAct = Boolean(item.version_id);
+        const approveButton = status === 'approved'
+            ? `<button class="btn btn-approved" disabled>✓ Approved</button>`
+            : `<button class="btn btn-primary" ${canAct ? '' : 'disabled'} onclick="updateStatus('${item.id}','${item.version_id}','approved')">✓ Approve</button>`;
+        const editsLabel = status === 'rejected' ? 'Add More Edits' : 'Request Edits';
+
         card.innerHTML = `
             <div class="card-loader hidden" id="loader-${item.id}"><div class="spinner"></div></div>
-            <div class="media-box" ${!item.isEmpty && item.assets.length ? `onclick="goFullscreen('${item.id}')" title="Tap to view full screen"` : ''}>
+            <div class="media-box" ${item.assets.length ? `onclick="goFullscreen('${item.id}')" title="Tap to view full screen"` : ''}>
                 ${mediaHTML}
-                ${!item.isEmpty && item.assets.length ? `<div class="media-actions"><button id="dl-btn-${item.id}" class="action-icon-btn" title="Download media" onclick="event.stopPropagation();handleDownload('${item.id}')">${ICON_DL}</button><button class="action-icon-btn" title="View full screen" onclick="event.stopPropagation();goFullscreen('${item.id}')">⛶</button></div>` : ''}
+                ${item.assets.length ? `<div class="media-actions"><button id="dl-btn-${item.id}" class="action-icon-btn" title="Download media" onclick="event.stopPropagation();handleDownload('${item.id}')">${ICON_DL}</button><button class="action-icon-btn" title="View full screen" onclick="event.stopPropagation();goFullscreen('${item.id}')">⛶</button></div>` : ''}
             </div>
             <div class="card-details">
-                <div class="badge-row"><span class="day-badge">${dateText}${item.isEmpty ? '' : ` · POST ${item.postNumber || 1}`}</span><span class="type-badge">${item.isEmpty ? 'SCHEDULED' : (multiple ? 'CAROUSEL' : (item.assets[0]?.media_type === 'video' ? 'VIDEO' : 'POST'))}</span></div>
-                <div class="caption-container"><p class="caption" id="caption-${item.id}">${escapeHTML(item.caption)}</p>${!item.isEmpty ? `<div class="caption-controls"><button class="icon-link" title="Expand caption" onclick="toggleCaption('${item.id}')">${ICON_EXPAND}</button><button class="icon-link" title="Copy caption" onclick="copyCaption('${item.id}')">${ICON_COPY}</button></div>` : ''}</div>
-                <div class="action-group"><button class="btn btn-primary" ${item.isEmpty || !item.version_id ? 'disabled' : ''} onclick="updateStatus('${item.id}','${item.version_id}','approved')">Approve</button><button class="btn btn-danger-light" ${item.isEmpty || !item.version_id ? 'disabled' : ''} onclick="rejectFlow('${item.id}','${item.version_id}')">Request Edits</button></div>
-                <div class="status-pill st-${status}">${escapeHTML(item.status.replace('_', ' '))}</div>
+                ${badgeRow}
+                <div class="caption-container"><p class="caption" id="caption-${item.id}" onclick="toggleCaption('${item.id}')" title="Tap to expand">${escapeHTML(item.caption)}</p><div class="caption-controls"><button class="icon-link" title="Expand caption" onclick="toggleCaption('${item.id}')">${ICON_EXPAND}</button><button class="icon-link" title="Copy caption" onclick="copyCaption('${item.id}')">${ICON_COPY}</button></div></div>
+                ${status === 'rejected' && item.lastNote ? `<div class="rejection-note"><strong>Your edit request:</strong> ${escapeHTML(item.lastNote)}</div>` : ''}
+                <div class="status-pill st-${status}">${STATUS_LABELS[status] || escapeHTML(String(item.status).replaceAll('_', ' '))}</div>
+                <div class="action-group">${approveButton}<button class="btn btn-danger-light" ${canAct ? '' : 'disabled'} onclick="rejectFlow('${item.id}','${item.version_id}')">${editsLabel}</button></div>
             </div>`;
         grid.appendChild(card);
     });
@@ -2187,38 +1038,64 @@ async function updateStatus(slotId, versionId, status, comment = '') {
     }
 }
 
-async function bulkApprove() {
-    const realItems = items.filter(item => !item.isEmpty && item.version_id);
-    if (!realItems.length) return showNotice('There is no content to approve.');
-    showNotice('Approving the week...');
+function awaitingItems() {
+    return items.filter(item => !item.isEmpty && item.version_id && isAwaitingReview(item));
+}
+
+function plural(count, word) {
+    return `${count} ${word}${count === 1 ? '' : 's'}`;
+}
+
+function bulkApprove() {
+    const targets = awaitingItems();
+    if (!targets.length) return showNotice('Nothing is waiting for your review this week.');
+    const body = document.getElementById('screen-body');
+    body.innerHTML = `<p style="font-size:.9rem;margin-bottom:16px;">This approves the <strong>${plural(targets.length, 'post')}</strong> still waiting for your review. Posts you have already approved or sent back for edits stay as they are.</p><button id="confirm-week-btn" class="btn btn-primary" style="width:100%;" onclick="submitBulkApprove()">✓ Approve ${plural(targets.length, 'Post')}</button>`;
+    openScreen('Approve the Week?');
+}
+
+async function submitBulkApprove() {
+    const targets = awaitingItems();
+    const button = document.getElementById('confirm-week-btn');
+    if (button) { button.disabled = true; button.textContent = 'Approving...'; }
     try {
-        for (const item of realItems) {
+        for (const item of targets) {
             const { error: slotError } = await db.from('post_slots').update({ current_status: 'approved' }).eq('id', item.id);
             if (slotError) throw slotError;
             const { error: versionError } = await db.from('post_versions').update({ is_approved: true }).eq('id', item.version_id);
             if (versionError) throw versionError;
         }
-        const { error } = await db.from('weekly_approvals').upsert({ brand_id: currentBrand.id, week_start_date: formatLocalDate(activeStartDate), status: 'approved' }, { onConflict: 'brand_id,week_start_date' });
-        if (error) throw error;
-        showNotice('The full week has been approved.');
+        const stillRejected = items.some(item => !item.isEmpty && item.status === 'rejected');
+        if (!stillRejected) {
+            const { error } = await db.from('weekly_approvals').upsert({ brand_id: currentBrand.id, week_start_date: formatLocalDate(activeStartDate), status: 'approved' }, { onConflict: 'brand_id,week_start_date' });
+            if (error) throw error;
+        }
+        closeScreen();
+        showNotice(stillRejected ? `${plural(targets.length, 'post')} approved. Posts with edit requests are unchanged.` : 'The full week has been approved.');
         await loadWeekData();
     } catch (error) {
         showNotice(`Week approval failed: ${error.message}`);
+        if (button) { button.disabled = false; button.textContent = 'Try Again'; }
     }
 }
 
 function bulkReject() {
+    const targets = awaitingItems();
+    if (!targets.length) return showNotice('Nothing is waiting for your review this week. Use the message box below for general notes.');
     const body = document.getElementById('screen-body');
-    body.innerHTML = `<p style="font-size:.9rem;margin-bottom:16px;">Describe the changes required for the week.</p><textarea id="modal-week-reason" class="feedback-input" rows="4" style="margin-top:0;" placeholder="Write the changes here..."></textarea><button class="btn btn-accent" style="width:100%;" onclick="submitBulkReject()">Send Week Feedback</button>`;
+    body.innerHTML = `<p style="font-size:.9rem;margin-bottom:16px;">Your note is sent for the <strong>${plural(targets.length, 'post')}</strong> still waiting for your review. Posts you have already approved stay approved.</p><textarea id="modal-week-reason" class="feedback-input" rows="4" style="margin-top:0;" placeholder="Write the changes here..."></textarea><button id="confirm-week-btn" class="btn btn-accent" style="width:100%;" onclick="submitBulkReject()">Send Edits for ${plural(targets.length, 'Post')}</button>`;
     openScreen('Request Week Edits');
+    document.getElementById('modal-week-reason').focus();
 }
 
 async function submitBulkReject() {
     const reason = document.getElementById('modal-week-reason').value.trim();
     if (!reason) return showNotice('Please write the changes required.');
-    const realItems = items.filter(item => !item.isEmpty && item.version_id);
+    const targets = awaitingItems();
+    const button = document.getElementById('confirm-week-btn');
+    if (button) { button.disabled = true; button.textContent = 'Sending...'; }
     try {
-        for (const item of realItems) {
+        for (const item of targets) {
             const { error: slotError } = await db.from('post_slots').update({ current_status: 'rejected' }).eq('id', item.id);
             if (slotError) throw slotError;
             const { error: versionError } = await db.from('post_versions').update({ is_approved: false }).eq('id', item.version_id);
@@ -2233,6 +1110,7 @@ async function submitBulkReject() {
         await loadWeekData();
     } catch (error) {
         showNotice(`Feedback failed: ${error.message}`);
+        if (button) { button.disabled = false; button.textContent = 'Try Again'; }
     }
 }
 
@@ -2240,6 +1118,7 @@ function rejectFlow(slotId, versionId) {
     const body = document.getElementById('screen-body');
     body.innerHTML = `<p style="font-size:.9rem;margin-bottom:16px;">What edits are needed for this post?</p><textarea id="modal-reject-reason" class="feedback-input" rows="4" style="margin-top:0;" placeholder="Add clear edit instructions..."></textarea><button class="btn btn-accent" style="width:100%;" onclick="submitReject('${slotId}','${versionId}')">Submit Feedback</button>`;
     openScreen('Request Edits');
+    document.getElementById('modal-reject-reason').focus();
 }
 
 async function submitReject(slotId, versionId) {
@@ -2274,7 +1153,7 @@ function copyCaption(id) {
     navigator.clipboard.writeText(text).then(() => showNotice('Caption copied.')).catch(() => showNotice('Copy failed.'));
 }
 function toggleCaption(id) { document.getElementById(`caption-${id}`)?.classList.toggle('expanded'); }
-function showNotice(message) { const notice = document.getElementById('notice'); notice.textContent = message; clearTimeout(showNotice.timer); showNotice.timer = setTimeout(() => notice.textContent = '', 4000); }
+function showNotice(message) { const notice = document.getElementById('notice'); notice.textContent = message; notice.classList.add('show'); clearTimeout(showNotice.timer); showNotice.timer = setTimeout(() => notice.classList.remove('show'), 4000); }
 function openScreen(title) { document.getElementById('screen-title').textContent = title; document.getElementById('screen').classList.remove('hidden'); }
 function closeScreen() { document.getElementById('screen').classList.add('hidden'); }
 async function closeMediaViewer() {
@@ -2304,7 +1183,7 @@ function updateProgress() {
 function viewAllCaptions() {
     const body = document.getElementById('screen-body');
     const real = items.filter(item => !item.isEmpty);
-    body.innerHTML = real.length ? real.map(item => `<div style="padding:16px;background:#f1f5f9;margin-bottom:12px;border-radius:12px;"><div style="font-weight:800;font-size:.7rem;color:var(--brand-blue);margin-bottom:5px;">${escapeHTML(item.date.toDateString())} · Post ${item.postNumber || 1}</div><p style="font-size:.85rem;white-space:pre-wrap;color:#334155;">${escapeHTML(item.caption)}</p></div>`).join('') : '<p>No captions available.</p>';
+    body.innerHTML = real.length ? real.map(item => `<div style="padding:16px;background:#f1f5f9;margin-bottom:12px;border-radius:12px;"><div style="font-weight:800;font-size:.7rem;color:var(--brand-blue);margin-bottom:5px;">${escapeHTML(item.date.toDateString())}${item.postCount > 1 ? ` · Post ${item.postNumber} of ${item.postCount}` : ''}</div><p style="font-size:.85rem;white-space:pre-wrap;color:#334155;">${escapeHTML(item.caption)}</p></div>`).join('') : '<p>No captions available.</p>';
     openScreen('Weekly Captions');
 }
 
@@ -2326,8 +1205,11 @@ async function goFullscreen(id) {
 }
 
 document.addEventListener('keydown', event => {
-    if (event.key === 'Escape' && !document.getElementById('media-viewer').classList.contains('hidden')) {
+    if (event.key !== 'Escape') return;
+    if (!document.getElementById('media-viewer').classList.contains('hidden')) {
         closeMediaViewer();
+    } else if (!document.getElementById('screen').classList.contains('hidden')) {
+        closeScreen();
     }
 });
 document.addEventListener('fullscreenchange', () => {
@@ -2336,689 +1218,6 @@ document.addEventListener('fullscreenchange', () => {
     }
 });
 document.addEventListener('DOMContentLoaded', init);
-</script>
-
-<script>
-/* =========================================================
-   CEO EXECUTIVE REVIEW UX — CEO_EXECUTIVE_UX_V1
-   This layer intentionally overrides presentation functions
-   while preserving the existing Supabase approval logic.
-   ========================================================= */
-
-let ceoReviewMode = 'review';
-let ceoManualOpenDays = new Set();
-let ceoManualClosedDays = new Set();
-let ceoRejectContext = null;
-let ceoRejectCategory = 'Other';
-
-function ceoRealItems() {
-    return items.filter(item => !item.isEmpty);
-}
-
-function ceoNeedsReview(item) {
-    return ['pending', 'pending_review', 'drafting'].includes(String(item.status || '').toLowerCase());
-}
-
-function ceoDateKey(date) {
-    return formatLocalDate(date);
-}
-
-function ceoItemsForDate(dateKey) {
-    return ceoRealItems().filter(item => ceoDateKey(item.date) === dateKey);
-}
-
-function ceoDayCounts(dayItems) {
-    return {
-        total: dayItems.length,
-        approved: dayItems.filter(item => item.status === 'approved').length,
-        rejected: dayItems.filter(item => item.status === 'rejected').length,
-        review: dayItems.filter(ceoNeedsReview).length
-    };
-}
-
-function ceoContentTitle(item) {
-    const text = String(item.caption || '').trim();
-    if (!text) return item.assets?.length ? 'Content ready for review' : 'Caption-only post';
-
-    const firstLine = text.split(/\n+/)[0].trim();
-    const sentenceMatch = firstLine.match(/^[\s\S]*?[.!?](?:\s|$)/);
-    const firstSentence = (sentenceMatch ? sentenceMatch[0] : firstLine).trim();
-    const cleaned = (firstSentence || firstLine).replace(/\s+/g, ' ');
-    return cleaned.length > 72 ? `${cleaned.slice(0, 69).trim()}...` : cleaned;
-}
-
-function ceoTypeLabel(item) {
-    if (item.assets?.length > 1) return 'Carousel';
-    const first = item.assets?.[0];
-    const url = String(first?.file_url || '');
-    if (first?.media_type === 'video' || /\.(mp4|webm|ogg|mov)(?:[?#].*)?$/i.test(url)) return 'Video';
-    if (item.assets?.length === 1) return 'Design';
-    return 'Caption';
-}
-
-function ceoWeekLabel() {
-    const start = new Date(activeStartDate);
-    const end = new Date(activeStartDate);
-    end.setDate(end.getDate() + 6);
-    return `${start.toLocaleDateString('en-GB',{day:'numeric',month:'short'})} – ${end.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}`;
-}
-
-function ensureCeoSummary() {
-    let summary = document.getElementById('ceo-executive-summary');
-    if (summary) return summary;
-
-    summary = document.createElement('section');
-    summary.id = 'ceo-executive-summary';
-    summary.className = 'ceo-summary';
-
-    const nav = document.querySelector('.app-bar');
-    nav.insertAdjacentElement('afterend', summary);
-
-    const subtitle = document.querySelector('.brand .subtitle');
-    if (subtitle) subtitle.textContent = 'Review what is ready, approve it, and move on.';
-
-    return summary;
-}
-
-function renderCeoSummary() {
-    const real = ceoRealItems();
-    const approved = real.filter(item => item.status === 'approved').length;
-    const rejected = real.filter(item => item.status === 'rejected').length;
-    const review = real.filter(ceoNeedsReview).length;
-    const percentage = real.length ? Math.round((approved / real.length) * 100) : 0;
-    const company = currentBrand?.name || 'De-Graceland Energy Limited';
-
-    const summary = ensureCeoSummary();
-    summary.innerHTML = `
-        <div class="ceo-summary-top">
-            <div>
-                <div class="ceo-eyebrow">Weekly Content Review</div>
-                <h2>${escapeHTML(ceoWeekLabel())}</h2>
-                <p class="ceo-summary-sub">
-                    ${review
-                        ? `${review} post${review === 1 ? '' : 's'} currently need your decision.`
-                        : rejected
-                            ? `Nothing is waiting on you right now. ${rejected} post${rejected === 1 ? '' : 's'} are back with the team for changes.`
-                            : real.length
-                                ? `Everything currently scheduled for ${escapeHTML(company)} has been approved.`
-                                : `There is no content scheduled for this week yet.`
-                    }
-                </p>
-            </div>
-            <div class="ceo-progress-number" aria-label="${percentage}% approved">
-                <strong>${percentage}%</strong>
-                <span>APPROVED</span>
-            </div>
-        </div>
-
-        <div class="ceo-metrics">
-            <div class="ceo-metric"><strong>${real.length}</strong><span>Total Posts</span></div>
-            <div class="ceo-metric"><strong>${approved}</strong><span>Approved</span></div>
-            <div class="ceo-metric"><strong>${review}</strong><span>Needs Review</span></div>
-            <div class="ceo-metric"><strong>${rejected}</strong><span>Changes Requested</span></div>
-        </div>
-
-        <div class="ceo-progress-track" aria-hidden="true"><div style="width:${percentage}%"></div></div>
-
-        <div class="ceo-review-tabs">
-            <button class="ceo-review-tab ${ceoReviewMode === 'review' ? 'active' : ''}" onclick="ceoSetReviewMode('review')">
-                Needs My Review <span class="count">${review}</span>
-            </button>
-            <button class="ceo-review-tab ${ceoReviewMode === 'all' ? 'active' : ''}" onclick="ceoSetReviewMode('all')">
-                All Content <span class="count">${real.length}</span>
-            </button>
-            <button class="ceo-review-tab" style="margin-left:auto" onclick="viewAllCaptions()">
-                View Captions
-            </button>
-        </div>`;
-}
-
-window.ceoSetReviewMode = mode => {
-    ceoReviewMode = mode === 'all' ? 'all' : 'review';
-    renderCards();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-};
-
-window.toggleCeoDay = dateKey => {
-    const allDay = ceoItemsForDate(dateKey);
-    const allApproved = allDay.length > 0 && allDay.every(item => item.status === 'approved');
-
-    if (ceoManualClosedDays.has(dateKey)) {
-        ceoManualClosedDays.delete(dateKey);
-        ceoManualOpenDays.add(dateKey);
-    } else if (ceoManualOpenDays.has(dateKey)) {
-        ceoManualOpenDays.delete(dateKey);
-        ceoManualClosedDays.add(dateKey);
-    } else if (allApproved && ceoReviewMode === 'all') {
-        ceoManualOpenDays.add(dateKey);
-    } else {
-        ceoManualClosedDays.add(dateKey);
-    }
-
-    renderCards();
-};
-
-function ceoDayCollapsed(dateKey, dayItems) {
-    if (ceoManualOpenDays.has(dateKey)) return false;
-    if (ceoManualClosedDays.has(dateKey)) return true;
-    return ceoReviewMode === 'all' && dayItems.length > 0 && dayItems.every(item => item.status === 'approved');
-}
-
-function ceoMediaHTML(item) {
-    const multiple = item.assets.length > 1;
-
-    if (multiple) {
-        return `
-            <div class="carousel-container" id="carousel-${item.id}">
-                ${item.assets.map(asset => `<div class="carousel-item">${getAssetHTML(asset, item.id)}</div>`).join('')}
-            </div>
-            <div class="carousel-nav">
-                <button class="nav-btn" onclick="event.stopPropagation();moveSlide('${item.id}',-1)">❮</button>
-                <button class="nav-btn" onclick="event.stopPropagation();moveSlide('${item.id}',1)">❯</button>
-            </div>
-            <div class="carousel-dots" id="dots-${item.id}">
-                ${item.assets.map((_, i) => `<div class="dot ${i === 0 ? 'active' : ''}"></div>`).join('')}
-            </div>`;
-    }
-
-    if (item.assets.length === 1) {
-        return `<div class="carousel-item">${getAssetHTML(item.assets[0], item.id)}</div>`;
-    }
-
-    return '<div style="height:100%;width:100%;display:flex;align-items:center;justify-content:center;background:#f8fafc;color:#94a3b8;font-size:.78rem;font-weight:700;">Caption-only post</div>';
-}
-
-function ceoActionHTML(item) {
-    if (item.status === 'approved') {
-        return `
-            <div class="ceo-approved-state">✓ Approved</div>
-            <button class="ceo-change" onclick="rejectFlow('${item.id}','${item.version_id}')">Request a change instead</button>`;
-    }
-
-    if (item.status === 'rejected') {
-        return `
-            <div class="ceo-rejected-state">Changes requested — with the team</div>`;
-    }
-
-    return `
-        <button class="ceo-approve" onclick="ceoApprove('${item.id}','${item.version_id}')">✓ Approve</button>
-        <button class="ceo-change" onclick="rejectFlow('${item.id}','${item.version_id}')">Request a change</button>`;
-}
-
-function ceoPostCard(item, position, dayTotal) {
-    const cardState = item.status === 'approved' ? 'approved' : item.status === 'rejected' ? 'rejected' : '';
-    return `
-        <article class="ceo-post-card ${cardState}">
-            <div class="card-loader hidden" id="loader-${item.id}"><div class="spinner"></div></div>
-
-            <div class="ceo-post-media"
-                 ${item.assets.length ? `onclick="goFullscreen('${item.id}')" title="Tap to view full screen"` : ''}>
-                ${ceoMediaHTML(item)}
-                ${item.assets.length ? `
-                    <div class="media-actions">
-                        <button id="dl-btn-${item.id}" class="action-icon-btn" title="Download media" onclick="event.stopPropagation();handleDownload('${item.id}')">${ICON_DL}</button>
-                        <button class="action-icon-btn" title="View full screen" onclick="event.stopPropagation();goFullscreen('${item.id}')">⛶</button>
-                    </div>` : ''}
-            </div>
-
-            <div class="ceo-post-body">
-                <div class="ceo-post-meta">
-                    <span class="ceo-post-order">Post ${item.postNumber || position} of ${dayTotal}</span>
-                    <span class="ceo-content-type">${escapeHTML(ceoTypeLabel(item))}</span>
-                </div>
-
-                <div class="ceo-post-title">${escapeHTML(ceoContentTitle(item))}</div>
-
-                <p class="ceo-caption" id="caption-${item.id}">${escapeHTML(item.caption || 'No caption supplied.')}</p>
-
-                <div class="ceo-caption-tools">
-                    <button class="ceo-text-action" onclick="toggleCaption('${item.id}')">Read full caption</button>
-                    <button class="ceo-text-action" onclick="copyCaption('${item.id}')">Copy caption</button>
-                </div>
-
-                <div class="ceo-card-actions">
-                    ${item.version_id ? ceoActionHTML(item) : '<div class="ceo-rejected-state">This post has no submitted version yet.</div>'}
-                </div>
-            </div>
-        </article>`;
-}
-
-function ceoCompletionHTML(real, rejected) {
-    if (!real.length) {
-        return `
-            <div class="ceo-empty-state">
-                <div class="ceo-empty-icon">○</div>
-                <h3>No content is scheduled yet</h3>
-                <p>The marketing team has not submitted content for this week. When posts are ready, they will appear here automatically.</p>
-                <button class="btn btn-ghost-dark" onclick="ceoSetReviewMode('all')">View Weekly Schedule</button>
-            </div>`;
-    }
-
-    if (rejected) {
-        return `
-            <div class="ceo-empty-state">
-                <div class="ceo-empty-icon">✓</div>
-                <h3>You’re all caught up</h3>
-                <p>Nothing is waiting for your approval right now. ${rejected} post${rejected === 1 ? ' is' : 's are'} back with the marketing team for the changes you requested.</p>
-                <button class="btn btn-primary" onclick="ceoSetReviewMode('all')">View All Content</button>
-            </div>`;
-    }
-
-    return `
-        <div class="ceo-empty-state">
-            <div class="ceo-empty-icon">✓</div>
-            <h3>All content approved</h3>
-            <p>Every submitted post for ${escapeHTML(ceoWeekLabel())} has been reviewed and approved. There is nothing else you need to do here.</p>
-            <button class="btn btn-primary" onclick="ceoSetReviewMode('all')">View Approved Content</button>
-        </div>`;
-}
-
-/* Override the original card renderer with the executive review board. */
-function renderCards() {
-    renderCeoSummary();
-
-    const grid = document.getElementById('content-grid');
-    grid.classList.add('ceo-review-board');
-    grid.innerHTML = '';
-
-    const real = ceoRealItems();
-    const rejected = real.filter(item => item.status === 'rejected').length;
-
-    let visible = real;
-    if (ceoReviewMode === 'review') {
-        visible = real.filter(ceoNeedsReview);
-    }
-
-    if (!visible.length) {
-        grid.innerHTML = ceoCompletionHTML(real, rejected);
-        updateProgress();
-        return;
-    }
-
-    const orderedDates = [...new Set(visible.map(item => ceoDateKey(item.date)))];
-
-    orderedDates.forEach(dateKey => {
-        const visibleDayItems = visible.filter(item => ceoDateKey(item.date) === dateKey);
-        const allDayItems = ceoItemsForDate(dateKey);
-        const counts = ceoDayCounts(allDayItems);
-        const dayDate = visibleDayItems[0].date;
-        const collapsed = ceoDayCollapsed(dateKey, allDayItems);
-
-        const weekday = dayDate.toLocaleDateString('en-GB', { weekday: 'long' });
-        const month = dayDate.toLocaleDateString('en-GB', { month: 'short' });
-        const dayNumber = dayDate.getDate();
-
-        let pillClass = 'review';
-        let pillText = `${counts.review} need review`;
-        if (counts.rejected) {
-            pillClass = 'changes';
-            pillText = `${counts.rejected} change${counts.rejected === 1 ? '' : 's'} requested`;
-        }
-        if (counts.approved === counts.total && counts.total) {
-            pillClass = 'done';
-            pillText = 'All approved';
-        }
-
-        const supportingText = ceoReviewMode === 'review'
-            ? `${visibleDayItems.length} waiting on you · ${counts.total} total`
-            : `${counts.total} post${counts.total === 1 ? '' : 's'} · ${counts.approved} approved`;
-
-        const section = document.createElement('section');
-        section.className = `ceo-day ${collapsed ? 'collapsed' : ''}`;
-        section.innerHTML = `
-            <button class="ceo-day-header" onclick="toggleCeoDay('${dateKey}')" aria-expanded="${!collapsed}">
-                <div class="ceo-day-title">
-                    <div class="ceo-day-date">
-                        <strong>${dayNumber}</strong>
-                        <span>${escapeHTML(month)}</span>
-                    </div>
-                    <div class="ceo-day-heading">
-                        <strong>${escapeHTML(weekday)}</strong>
-                        <span>${escapeHTML(supportingText)}</span>
-                    </div>
-                </div>
-
-                <div class="ceo-day-state">
-                    <span class="ceo-day-pill ${pillClass}">${escapeHTML(pillText)}</span>
-                    <span class="ceo-chevron">▼</span>
-                </div>
-            </button>
-
-            <div class="ceo-day-body">
-                <div class="ceo-post-list">
-                    ${visibleDayItems.map((item, index) => ceoPostCard(item, index + 1, counts.total)).join('')}
-                </div>
-            </div>`;
-
-        grid.appendChild(section);
-    });
-
-    updateProgress();
-}
-
-/* Keep the old counters valid for compatibility, while the visible UI uses the new summary. */
-function updateProgress() {
-    const real = ceoRealItems();
-    const approved = real.filter(item => item.status === 'approved').length;
-    const pending = real.filter(ceoNeedsReview).length;
-    const rejected = real.filter(item => item.status === 'rejected').length;
-    const percentage = real.length ? Math.round((approved / real.length) * 100) : 0;
-
-    const approvedEl = document.getElementById('approved-count');
-    const pendingEl = document.getElementById('pending-count');
-    const rejectedEl = document.getElementById('rejected-count');
-    const fillEl = document.getElementById('progress-fill');
-    const pctEl = document.getElementById('progressPct');
-
-    if (approvedEl) approvedEl.textContent = approved;
-    if (pendingEl) pendingEl.textContent = pending;
-    if (rejectedEl) rejectedEl.textContent = rejected;
-    if (fillEl) fillEl.style.width = `${percentage}%`;
-    if (pctEl) pctEl.textContent = `${percentage}%`;
-
-    renderCeoSummary();
-}
-
-async function syncCeoWeeklyApprovalStatus() {
-    if (!db || !currentBrand || !activeStartDate) return;
-
-    const start = new Date(activeStartDate);
-    const end = new Date(activeStartDate);
-    end.setDate(end.getDate() + 7);
-
-    try {
-        const { data: slots, error: slotError } = await db.from('post_slots')
-            .select('current_status')
-            .eq('brand_id', currentBrand.id)
-            .gte('scheduled_date', formatLocalDate(start))
-            .lt('scheduled_date', formatLocalDate(end));
-        if (slotError) throw slotError;
-
-        const statuses = (slots || []).map(row => String(row.current_status || 'pending').toLowerCase());
-        let status = 'pending_review';
-        if (statuses.length && statuses.every(value => value === 'approved')) status = 'approved';
-        else if (statuses.includes('rejected')) status = 'rejected';
-
-        const { error } = await db.from('weekly_approvals').upsert({
-            brand_id: currentBrand.id,
-            week_start_date: formatLocalDate(activeStartDate),
-            status
-        }, { onConflict: 'brand_id,week_start_date' });
-        if (error) throw error;
-    } catch (error) {
-        console.warn('Weekly approval sync failed:', error);
-    }
-}
-
-window.ceoApprove = async (slotId, versionId) => {
-    if (!slotId || !versionId) return;
-    showNotice('Approving post...');
-    await updateStatus(slotId, versionId, 'approved');
-    await syncCeoWeeklyApprovalStatus();
-};
-
-function rejectFlow(slotId, versionId) {
-    ceoRejectContext = { slotId, versionId };
-    ceoRejectCategory = 'Other';
-
-    const body = document.getElementById('screen-body');
-    body.innerHTML = `
-        <p style="font-size:.86rem;color:#64748b;line-height:1.55;margin-bottom:8px;">
-            What would you like the team to change? Choose the closest category, then add a short note.
-        </p>
-
-        <div class="ceo-category-grid">
-            ${['Design','Caption','Information','Video','Branding','Other'].map(category => `
-                <button type="button"
-                        class="ceo-category ${category === 'Other' ? 'active' : ''}"
-                        data-ceo-category="${category}"
-                        onclick="ceoSelectRejectCategory('${category}')">
-                    ${category}
-                </button>`).join('')}
-        </div>
-
-        <label style="display:block;font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin-bottom:6px;">
-            Quick comments
-        </label>
-        <div class="ceo-quick-notes">
-            ${[
-                'Make the text smaller',
-                'Change the image',
-                'Shorten the caption',
-                'Fix the branding',
-                'Please verify this information'
-            ].map(note => `<button type="button" class="ceo-quick-note" onclick="ceoUseQuickNote('${note.replace(/'/g, "\\'")}')">${note}</button>`).join('')}
-        </div>
-
-        <textarea id="ceo-reject-note"
-                  class="feedback-input"
-                  rows="4"
-                  style="margin:0 0 14px;max-width:none;"
-                  placeholder="Example: The logo is too large. Please reduce it and keep more space around the headline."></textarea>
-
-        <button class="btn btn-accent" style="width:100%;" onclick="ceoSubmitReject()">Send Change Request</button>`;
-
-    openScreen('Request a Change');
-}
-
-window.ceoSelectRejectCategory = category => {
-    ceoRejectCategory = category;
-    document.querySelectorAll('[data-ceo-category]').forEach(button => {
-        button.classList.toggle('active', button.dataset.ceoCategory === category);
-    });
-};
-
-window.ceoUseQuickNote = note => {
-    const area = document.getElementById('ceo-reject-note');
-    if (!area) return;
-    area.value = area.value.trim()
-        ? `${area.value.trim()}\n${note}`
-        : note;
-    area.focus();
-};
-
-window.ceoSubmitReject = async () => {
-    if (!ceoRejectContext) return;
-    const area = document.getElementById('ceo-reject-note');
-    const note = String(area?.value || '').trim();
-
-    if (!note) {
-        showNotice('Please add a short note so the team knows what to change.');
-        area?.focus();
-        return;
-    }
-
-    const comment = `[${ceoRejectCategory}] ${note}`;
-    const { slotId, versionId } = ceoRejectContext;
-    ceoRejectContext = null;
-    closeScreen();
-    await updateStatus(slotId, versionId, 'rejected', comment);
-    await syncCeoWeeklyApprovalStatus();
-};
-
-/* Make the general feedback area read more naturally for an executive reviewer. */
-document.addEventListener('DOMContentLoaded', () => {
-    const section = document.querySelector('.feedback-section');
-    if (section) {
-        const heading = section.querySelector('h2');
-        const paragraph = section.querySelector('p');
-        if (heading) heading.textContent = 'Need anything else from the team?';
-        if (paragraph) paragraph.textContent = 'Leave a general note or request a call about this week’s content.';
-    }
-});
-</script>
-
-
-<script>
-/* CEO_SIMPLE_HEADER_V1 */
-
-function renderCeoSummary() {
-    const real = ceoRealItems();
-    const approved = real.filter(item => item.status === 'approved').length;
-    const review = real.filter(ceoNeedsReview).length;
-    const percentage = real.length ? Math.round((approved / real.length) * 100) : 0;
-
-    const summary = ensureCeoSummary();
-
-    let message = '';
-    if (review) {
-        message = `${review} post${review === 1 ? '' : 's'} need your review.`;
-    } else if (real.length) {
-        message = 'Nothing needs your attention right now.';
-    } else {
-        message = 'No content has been submitted for this week yet.';
-    }
-
-    summary.innerHTML = `
-        <div class="ceo-summary-top">
-            <div>
-                <div class="ceo-eyebrow">Weekly Content Review</div>
-                <h2>${escapeHTML(ceoWeekLabel())}</h2>
-                <p class="ceo-summary-sub">${escapeHTML(message)}</p>
-            </div>
-        </div>
-
-        <div class="ceo-progress-track" aria-hidden="true">
-            <div style="width:${percentage}%"></div>
-        </div>
-
-        <div class="ceo-review-tabs">
-            <button class="ceo-review-tab ${ceoReviewMode === 'review' ? 'active' : ''}" onclick="ceoSetReviewMode('review')">
-                Needs My Review <span class="count">${review}</span>
-            </button>
-
-            <button class="ceo-review-tab ${ceoReviewMode === 'all' ? 'active' : ''}" onclick="ceoSetReviewMode('all')">
-                All Content <span class="count">${real.length}</span>
-            </button>
-
-            <span class="ceo-simple-progress-note">
-                ${real.length ? `${approved} of ${real.length} approved` : ''}
-            </span>
-        </div>`;
-}
-</script>
-
-
-<script>
-/* CEO_MINIMAL_BOARD_V1 */
-
-function ensureCeoMinimalBar() {
-    let bar = document.getElementById('ceo-minimal-bar');
-    if (bar) return bar;
-
-    bar = document.createElement('section');
-    bar.id = 'ceo-minimal-bar';
-    bar.className = 'ceo-minimal-bar';
-
-    const grid = document.getElementById('content-grid');
-    grid.parentElement.insertBefore(bar, grid);
-
-    return bar;
-}
-
-function renderCeoMinimalBar() {
-    const real = ceoRealItems();
-    const review = real.filter(ceoNeedsReview).length;
-
-    const bar = ensureCeoMinimalBar();
-
-    let message = '';
-    if (review) {
-        message = `${review} post${review === 1 ? '' : 's'} need your review`;
-    } else if (real.length) {
-        message = 'You are all caught up';
-    } else {
-        message = 'No content has been submitted yet';
-    }
-
-    bar.innerHTML = `
-        <div class="ceo-minimal-title">
-            <div class="label">Content Review</div>
-            <h2>${escapeHTML(ceoWeekLabel())}</h2>
-            <p>${escapeHTML(message)}</p>
-        </div>
-
-        <div class="ceo-minimal-tabs">
-            <button class="ceo-minimal-tab ${ceoReviewMode === 'review' ? 'active' : ''}"
-                    onclick="ceoSetReviewMode('review')">
-                Needs Review <span class="count">${review}</span>
-            </button>
-
-            <button class="ceo-minimal-tab ${ceoReviewMode === 'all' ? 'active' : ''}"
-                    onclick="ceoSetReviewMode('all')">
-                All Content <span class="count">${real.length}</span>
-            </button>
-        </div>`;
-}
-
-/*
- * Wrap the current renderer instead of replacing all approval logic.
- * The previous executive renderer continues arranging days/posts;
- * this layer simply removes the dashboard and adds the minimal top bar.
- */
-const originalMinimalRenderCards = renderCards;
-
-renderCards = function() {
-    originalMinimalRenderCards();
-    renderCeoMinimalBar();
-
-    const summary = document.getElementById('ceo-executive-summary');
-    if (summary) summary.style.display = 'none';
-};
-</script>
-
-
-<script>
-/* CEO_PRO_REVIEW_LAYOUT_V1 */
-
-updateProgress = function() {
-    const real = ceoRealItems();
-    const approved = real.filter(item => item.status === 'approved').length;
-    const pending = real.filter(ceoNeedsReview).length;
-    const rejected = real.filter(item => item.status === 'rejected').length;
-    const percentage = real.length ? Math.round((approved / real.length) * 100) : 0;
-
-    const approvedEl = document.getElementById('approved-count');
-    const pendingEl = document.getElementById('pending-count');
-    const rejectedEl = document.getElementById('rejected-count');
-    const fillEl = document.getElementById('progress-fill');
-    const pctEl = document.getElementById('progressPct');
-
-    if (approvedEl) approvedEl.textContent = approved;
-    if (pendingEl) pendingEl.textContent = pending;
-    if (rejectedEl) rejectedEl.textContent = rejected;
-    if (fillEl) fillEl.style.width = `${percentage}%`;
-    if (pctEl) pctEl.textContent = `${percentage}%`;
-
-    if (typeof renderCeoMinimalBar === 'function') renderCeoMinimalBar();
-};
-</script>
-
-
-<script>
-/* CEO_DAYS_COLLAPSED_DEFAULT_V1 */
-
-/*
- * All day folders start closed when the page loads.
- * A day opens only after the CEO clicks it.
- */
-ceoDayCollapsed = function(dateKey, dayItems) {
-    if (ceoManualOpenDays.has(dateKey)) return false;
-    return true;
-};
-
-/*
- * Clicking a day toggles it open/closed.
- */
-toggleCeoDay = function(dateKey) {
-    if (ceoManualOpenDays.has(dateKey)) {
-        ceoManualOpenDays.delete(dateKey);
-    } else {
-        ceoManualOpenDays.add(dateKey);
-    }
-
-    renderCards();
-};
 </script>
 
 </body>
