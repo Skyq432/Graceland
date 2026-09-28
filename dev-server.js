@@ -29,7 +29,13 @@ const RELOAD_SNIPPET = `<script>(function(){var s=new EventSource('/__livereload
 const clients = new Set();
 
 const server = http.createServer((req, res) => {
-  const url = new URL(req.url, `http://${req.headers.host}`);
+  let url;
+  try {
+    url = new URL(req.url.replace(/^\/+/, '/'), 'http://localhost');
+  } catch {
+    res.writeHead(400).end('Bad request');
+    return;
+  }
 
   if (url.pathname === '/__livereload') {
     res.writeHead(200, {
